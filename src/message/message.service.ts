@@ -5,6 +5,7 @@ import { Message } from './entities/message.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
 import { getConnectionId } from 'src/utils/getConnectionId';
+import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class MessageService {
@@ -77,23 +78,20 @@ export class MessageService {
   }
 
   getNewMessages = async (userId: Types.ObjectId) => {
-    console.log("🚀 ~ file: message.service.ts:80 ~ MessageService ~ getNewMessages= ~ userId:", userId)
     const where = {
       receiver: userId,
       // isReceived: false
     };
-    console.log("🚀 ~ file: message.service.ts:85 ~ MessageService ~ getNewMessages= ~ where:", where)
 
     const update = {
       isReceived: true,
       receivedAt: new Date().toISOString()
     }
 
-    const newMessages = await this.messageModel.find(where);
-    console.log("🚀 ~ file: message.service.ts:91 ~ MessageService ~ getNewMessages= ~ newMessages:", newMessages)
+    const newMessages = await this.messageModel.updateMany(where, update);
   }
 
-  updateMessage = async (messageId: Types.ObjectId, updateBody: Types.ObjectId) => {
+  updateMessage = async (messageId: Types.ObjectId, updateBody: UpdateMessageDto) => {
     const message = await this.messageModel.findById(messageId);
 
     if (!message) {

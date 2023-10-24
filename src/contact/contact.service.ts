@@ -94,18 +94,19 @@ export class ContactService {
             },
             {
               $project: {
-                _id: "$_id",
-                connectionId: "$connectionId",
-                userId: "$userId",
-                contactUser: "$contactUser",
-                status: "$status",
-                isAccepted: "$isAccepted",
-                isRejected: "$isRejected",
-                isCanceled: "$isCanceled",
-                lastMessage: "$lastMessage",
-                isNewContact: "$isNewContact",
-                createdAt: "$createdAt",
-                updatedAt: "$updatedAt",
+                // _id: "$_id",
+                // connectionId: "$connectionId",
+                // userId: "$userId",
+                // contactUser: "$contactUser",
+                // status: "$status",
+                // isAccepted: "$isAccepted",
+                // isRejected: "$isRejected",
+                // isCanceled: "$isCanceled",
+                // lastMessage: "$lastMessage",
+                // isNewContact: "$isNewContact",
+                // createdAt: "$createdAt",
+                // updatedAt: "$updatedAt",
+                __v: 0
               }
             }
           ],
@@ -170,23 +171,47 @@ export class ContactService {
         $lookup: {
           from: messageCollection,
           let: { connectionId: { $concat: [{ $arrayElemAt: ["$connectionArray", 0] }, "_", { $arrayElemAt: ["$connectionArray", 1] }] } },
-          as: "unSeenMessages",
+          as: "messages",
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    { $ne: [userIdAsObjectId, '$sender'] },
                     { $eq: ["$connectionId", "$$connectionId"] },
-                    { $eq: ["$isDeleted", false] }
                   ],
                 },
               },
             },
             {
-              $group: {
-                _id: null,
-                count: { $sum: 1 }
+              $facet: {
+                lastMessage: [
+                  {
+                    $sort: {
+                      createdAt: -1
+                    }
+                  },
+                  {
+                    $limit: 1
+                  }
+                ],
+                unSeenMessages: [
+                  {
+                    $match: {
+                      $expr: {
+                        $and: [
+                          { $ne: [userIdAsObjectId, '$sender'] },
+                          { $eq: ["$isSeen", false] }
+                        ],
+                      },
+                    },
+                  },
+                  {
+                    $group: {
+                      _id: null,
+                      count: { $sum: 1 }
+                    }
+                  },
+                ]
               }
             },
           ],
@@ -194,7 +219,19 @@ export class ContactService {
       },
       {
         $unwind: {
-          path: '$unSeenMessages',
+          path: '$messages',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$messages.lastMessage',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: '$messages.unSeenMessages',
           preserveNullAndEmptyArrays: true,
         },
       },
@@ -205,10 +242,11 @@ export class ContactService {
           image: "$image",
           contactInfo: "$contactInfo",
           onlineStatus: "$onlineStatus",
-          unSeenMessages: "$unSeenMessages.count",
           createdAt: "$createdAt",
           updatedAt: "$updatedAt",
-          lastMessageCreatedAt: "$contactInfo.lastMessage.createdAt",
+          lastMessage: { $cond: ["$messages.lastMessage", "$messages.lastMessage", {}] },
+          unSeenMessages: { $cond: ["$messages.unSeenMessages.count", "$messages.unSeenMessages.count", 0] },
+          lastMessageCreatedAt: { $cond: ["$messages.lastMessage.createdAt", "$messages.lastMessage.createdAt", null] },
         }
       }
     ];
@@ -503,79 +541,4 @@ export class ContactService {
       totalResults: totalResults.length,
     };
   };
-
-  // getOnlineContacts = async (userId, status, emitEventToClient, emitEvent) => {
-  //   const friends = await Contact.find({ userId, status: 'ACCEPTED' });
-  //   for (let index = 0; index < friends.length; index += 1) {
-  //     const contactUser = friends[index].contactUser;
-
-  //     emitEventToClient(contactUser, "online", emitEvent, { contactUser: userId, status }, (err, data) => {
-  //       if (err) {
-  //         console.log(err);
-  //       }
-  //     });
-  //   }
-  // };
-
-  // getNewMessages = async (userId) => {
-  //   console.log('🚀 ~ file: contact.service.js:354 ~ getNewMessages ~ userId:', userId);
-  //   const messages = await Contact.aggregate([
-  //     { $match: { userId: Types.ObjectId(userId), status: 'ACCEPTED' } },
-  //     {
-  //       $lookup: {
-  //         from: messageCollection,
-  //         let: { contactUser: '$contactUser' },
-  //         pipeline: [
-  //           {
-  //             $match: {
-  //               $expr: { $eq: ['$sender', '$$contactUser'] },
-  //             },
-  //           },
-  //           { $sort: { createdAt: -1 } },
-  //         ],
-  //         as: 'messages',
-  //       },
-  //     },
-  //     { $unwind: { path: '$messages' } },
-  //   ]);
-
-  //   const newMessages = [];
-
-  //   messages.forEach((value, index) => {
-  //     if (value.messages.length) {
-  //       const tempMessage = {
-  //         contactUser: value.contactUser,
-  //         lastMessage: value.messages[0],
-  //         unSeenMessages: value.messages.length,
-  //       };
-
-  //       newMessages.push(tempMessage);
-  //     }
-  //   });
-
-  //   return newMessages
-  // };
 }
-/**
- * 
- * 
- *     // {
-      //   $project: {
-      //     name: '$name',
-      //     email: '$email',
-      //     image: {
-      //       $cond: {
-      //         if: '$image',
-      //         then: '$image',
-      //         else: '',
-      //       },
-      //     },
-      //     contactInfo: '$contacts',
-      //     lastMessage: '$messages.lastMessage',
-      //     unSeenMessages: '$messages.unSeenMessages.count',
-      //     // isOnline: { $cond: { if: '$isOnline', then: true, else: false } },
-      //     isOnline: '$isOnline',
-      //   },
-      // },
-      // { $sort: { "lastMessage.createdAt": -1 } }
- */

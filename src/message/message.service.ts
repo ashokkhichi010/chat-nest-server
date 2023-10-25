@@ -4,7 +4,7 @@ import { Model, PipelineStage, Types } from 'mongoose';
 import { Message } from './entities/message.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
-import { getConnectionId } from 'src/utils/getConnectionId';
+import { getConnectionId } from '../utils/getConnectionId';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()

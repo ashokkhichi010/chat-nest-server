@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, HttpCode } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, UserListDto } from './users.dto';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { Roles } from '../decorators/roles.decorator';
-import { AuthUser } from 'src/decorators/user.decorator';
+import { AuthUser } from '../decorators/user.decorator';
 import { User } from './users.entity';
 
 @Controller('users')

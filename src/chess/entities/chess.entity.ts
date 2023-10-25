@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, ObjectId, Types } from "mongoose";
-import { deviceCollection } from "src/auth/entities/device.entity";
-import { userCollection } from "src/users/users.entity";
+import { deviceCollection } from "../../auth/entities/device.entity";
+import { userCollection } from "../../users/users.entity";
 
 @Schema({ timestamps: true })
 export class ChessConnection extends Document {

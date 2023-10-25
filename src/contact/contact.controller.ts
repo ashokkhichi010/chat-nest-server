@@ -7,7 +7,7 @@ import { AuthUser } from '../decorators/user.decorator';
 import { User } from '../users/users.entity';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { friendRequestAccepted, friendRequestReceived, friendRequestRejected, friendRequestSent } from '../utils/notification';
-import { SocketGateway } from 'src/socket/socket.gateway';
+import { SocketGateway } from '../socket/socket.gateway';
 
 @Controller('contacts')
 export class ContactController {

@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { Types } from 'mongoose';
-import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
 export class CreateUserDto {
   name: string;

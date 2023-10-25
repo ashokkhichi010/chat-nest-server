@@ -7,8 +7,8 @@ import { AuthUser } from '../decorators/user.decorator';
 import { MessageListDto } from './dto/create-message.dto';
 import { User } from '../users/users.entity';
 import { ContactService } from '../contact/contact.service';
-import { SocketGateway } from 'src/socket/socket.gateway';
-import { getConnectionId } from 'src/utils/getConnectionId';
+import { SocketGateway } from '../socket/socket.gateway';
+import { getConnectionId } from '../utils/getConnectionId';
 
 @Controller('chats')
 export class MessageController {

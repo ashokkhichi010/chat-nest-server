@@ -5,8 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from './users.entity';
 import { CreateUserDto, UpdateUserDto, UserListDto } from './users.dto';
 import { customConfig } from '../config/config';
-import { contactCollection } from 'src/contact/entities/contact.entity';
-import { ReturnQueryDto } from 'src/common/dto/pagination-query.dto';
+import { contactCollection } from '../contact/entities/contact.entity';
+import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
 
 const config = customConfig()
 

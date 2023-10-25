@@ -1,10 +1,7 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ChessService } from './chess.service';
 import { Roles } from '../decorators/roles.decorator';
-import { AuthUser } from 'src/decorators/user.decorator';
-import { User } from 'src/users/users.entity';
-import { ObjectId } from 'mongoose';
-import { ContactService } from 'src/contact/contact.service';
+import { ContactService } from '../contact/contact.service';
 
 @Controller('chess')
 export class ChessController {

@@ -1,10 +1,10 @@
 import { InjectModel } from "@nestjs/mongoose";
 import { SocketConnection } from "./entities/socketConnection.entity";
 import mongoose, { Model, Types } from "mongoose";
-import { TokenService } from "src/auth/services/token.service";
-import { UsersService } from "src/users/users.service";
-import { customConfig } from "src/config/config";
-import { User } from "src/users/users.entity";
+import { TokenService } from "../auth/services/token.service";
+import { UsersService } from "../users/users.service";
+import { customConfig } from "../config/config";
+import { User } from "../users/users.entity";
 
 export class SocketService {
   constructor(

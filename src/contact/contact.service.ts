@@ -6,8 +6,8 @@ import { ContactListDto } from './dto/create-contact.dto';
 import { Message, messageCollection } from '../message/entities/message.entity';
 import { User, userCollection } from '../users/users.entity';
 import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
-import { socketConnectionCollection } from 'src/socket/entities/socketConnection.entity';
-import { getConnectionId } from 'src/utils/getConnectionId';
+import { socketConnectionCollection } from '../socket/entities/socketConnection.entity';
+import { getConnectionId } from '../utils/getConnectionId';
 
 @Injectable()
 export class ContactService {

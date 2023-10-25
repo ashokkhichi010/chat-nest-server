@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { userCollection } from 'src/users/users.entity';
+import { userCollection } from '../../users/users.entity';
 
 const environments = ['DEVELOPMENT', 'STAGING', 'PRODUCTION', 'UAT', 'LOCAL']
 

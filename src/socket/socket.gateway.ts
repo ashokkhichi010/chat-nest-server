@@ -1,13 +1,13 @@
 import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { MessageService } from 'src/message/message.service';
-import { CreateMessageDto } from 'src/message/dto/create-message.dto';
+import { MessageService } from '../message/message.service';
+import { CreateMessageDto } from '../message/dto/create-message.dto';
 import { SocketService } from './socket.service';
 import { ObjectId, Types } from 'mongoose';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { ContactService } from 'src/contact/contact.service';
-import { UsersService } from 'src/users/users.service';
-import { Message } from 'src/message/entities/message.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { ContactService } from '../contact/contact.service';
+import { UsersService } from '../users/users.service';
+import { Message } from '../message/entities/message.entity';
 
 @WebSocketGateway({ cors: { origin: process.env.APP_URL, credentials: false }, transports: ['websocket'] })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {

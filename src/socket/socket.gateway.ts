@@ -60,16 +60,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   }
 
-  @SubscribeMessage('new-message')
-  async handleGetNewMessages(@ConnectedSocket() socket: Socket, @MessageBody() messageObj: CreateMessageDto) {
-    const clientId: string = socket.id;
-
-    const newMessage = await this.messageService.createMessage(messageObj)
-    // const friendClientId = await clientServer
-
-    socket.to('394822033os02k9a9c99s9d93').timeout(1000).emit('new-message', newMessage);
-  }
-
   @SubscribeMessage('message-read')
   async handleMessageRead(@MessageBody() messageObj: Message) {
     const { _id, sender, receiver } = messageObj;
@@ -107,7 +97,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   emitEvents = async (userId: Types.ObjectId, event: string, data: any, callback: Function | null = null) => {
     const clientIds = await this.socketService.getConnectedClientIds(userId);
-    console.log("🚀 ~ file: socket.gateway.ts:252 ~ SocketGateway ~ emitEvents= ~ clientIds:", event, '-->', clientIds)
+    console.log("🚀 ~ file: socket.gateway.ts:110 ~ emit-event:", event, '-->', clientIds)
     const customCallback = (err: Error, res: any) => {
       if (!res[0]?.success) {
         const notification = data?.notification;

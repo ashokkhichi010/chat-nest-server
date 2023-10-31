@@ -34,8 +34,8 @@ export class Contact extends Document {
   @Prop({ type: Date, default: null })
   canceledAt: Date;
 
-  @Prop({ type: Object, required: false, default: null })
-  lastMessage: object;
+  // @Prop({ type: Object, required: false, default: null })
+  // lastMessage: object;
 
   @Prop({ type: Boolean, required: false, default: false })
   isDeleted: boolean;

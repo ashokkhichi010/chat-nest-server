@@ -114,7 +114,7 @@ export class UsersService {
           }
         }
       },
-      { $unset: "connectionId" },
+      // { $unset: "connectionId" },
     ];
 
     const projectPipeline = [{
@@ -124,7 +124,7 @@ export class UsersService {
         email: "$email",
         image: "$image",
         phoneNumber: "$phoneNumber",
-        contactInfo: "$contactInfo"
+        contactInfo: { $cond: ['$contactInfo', '$contactInfo', null] }
       }
     }];
 

@@ -59,7 +59,7 @@ export class MessageController {
     await this.contactService.isContactExist(connectionId);
 
     const messageResult = await this.messageService.createMessage({ sender: userId, receiver: contactUser, message, connectionId });
-    await this.contactService.updateLastMessage(userId, contactUser, messageResult);
+    // await this.contactService.updateLastMessage(userId, contactUser, messageResult);
 
     let contacts1: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
     let messages1: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser, userId });
@@ -77,21 +77,17 @@ export class MessageController {
         }
 
         Object.assign(messageResult, updateMessage);
-        let tempMsg: any = messageResult.save();
-        let tempCon: any = this.contactService.updateLastMessage(userId, contactUser, messageResult);
-
-        [tempMsg, tempCon] = await Promise.all([tempMsg, tempCon]);
+        let tempMsg: any = await messageResult.save();
+        // let tempCon: any = this.contactService.updateLastMessage(userId, contactUser, messageResult);
+        // [tempMsg, tempCon] = await Promise.all([tempMsg, tempCon]);
 
         let contacts1: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
         let contacts2: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
 
-        // let messages1: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser, userId });
-        // let messages2: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser: userId, userId: contactUser });
+        [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
 
-        // [contacts1, messages1, contacts2, messages2] = await Promise.all([contacts1, messages1, contacts2, messages2]);
-
-        this.socketGateway.emitEvents(userId, 'message-received', { message: tempMsg, contacts: contacts1 }, null);
-        this.socketGateway.emitEvents(contactUser, 'message-received', { message: tempMsg, contacts: contacts2 }, null);
+        this.socketGateway.emitEvents(userId, 'message-received', { message: messageResult.toObject(), contacts: contacts1 }, null);
+        this.socketGateway.emitEvents(contactUser, 'message-received', { message: messageResult.toObject(), contacts: contacts2 }, null);
       }
     }
 

@@ -54,44 +54,56 @@ export class ContactService {
       { $match: { _id: { $ne: userIdAsObjectId }, isDeleted: false } },
       { $match: searchMatch },
       {
+        $addFields: {
+          connectionArray: {
+            $sortArray: {
+              input: [{ $toString: "$_id" }, userIdAsObjectId?.toString()],
+              sortBy: 1
+            },
+          }
+        }
+      },
+      {
         $lookup: {
           from: contactCollection,
-          let: { contactUser: "$_id" },
+          let: { connectionId: { $concat: [{ $arrayElemAt: ["$connectionArray", 0] }, "_", { $arrayElemAt: ["$connectionArray", 1] }] } },
+          // let: { contactUser: "$_id" },
           as: "contactInfo",
           pipeline: [
             {
               $match: {
                 $expr: {
                   $and: [
-                    {
-                      $or: [
-                        { $eq: ["$userId", "$$contactUser"] },
-                        { $eq: ["$contactUser", "$$contactUser"] },
-                      ],
-                    },
-                    {
-                      $or: [
-                        { $eq: ["$userId", userIdAsObjectId] },
-                        { $eq: ["$contactUser", userIdAsObjectId] },
-                      ],
-                    },
+                    // {
+                    //   $or: [
+                    //     { $eq: ["$userId", "$$contactUser"] },
+                    //     { $eq: ["$contactUser", "$$contactUser"] },
+                    //   ],
+                    // },
+                    // {
+                    //   $or: [
+                    //     { $eq: ["$userId", userIdAsObjectId] },
+                    //     { $eq: ["$contactUser", userIdAsObjectId] },
+                    //   ],
+                    // },
+                    { $eq: ["$$connectionId", "$connectionId"] },
                     { $eq: ["$status", "ACCEPTED"] },
                     { $eq: ["$isDeleted", false] },
                   ],
                 },
               },
             },
-            {
-              $addFields: {
-                isNewContact: {
-                  $cond: {
-                    if: { $ne: ["$lastMessage", null] },
-                    then: 0,
-                    else: 1
-                  }
-                }
-              }
-            },
+            // {
+            //   $addFields: {
+            //     isNewContact: {
+            //       $cond: {
+            //         if: { $ne: ["$lastMessage", null] },
+            //         then: 0,
+            //         else: 1
+            //       }
+            //     }
+            //   }
+            // },
             {
               $project: {
                 // _id: "$_id",
@@ -158,16 +170,6 @@ export class ContactService {
         },
       },
       {
-        $addFields: {
-          connectionArray: {
-            $sortArray: {
-              input: [{ $toString: "$_id" }, userIdAsObjectId?.toString()],
-              sortBy: 1
-            },
-          }
-        }
-      },
-      {
         $lookup: {
           from: messageCollection,
           let: { connectionId: { $concat: [{ $arrayElemAt: ["$connectionArray", 0] }, "_", { $arrayElemAt: ["$connectionArray", 1] }] } },
@@ -199,7 +201,8 @@ export class ContactService {
                     $match: {
                       $expr: {
                         $and: [
-                          { $ne: [userIdAsObjectId, '$sender'] },
+                          // { $ne: [userIdAsObjectId, '$sender'] },
+                          { $eq: [userIdAsObjectId, '$receiver'] },
                           { $eq: ["$isSeen", false] }
                         ],
                       },
@@ -409,7 +412,7 @@ export class ContactService {
 
     const connect = await this.isContactExist(connectionId);
 
-    connect.lastMessage = messageObj.toObject();
+    // connect.lastMessage = messageObj.toObject();
     return await connect.save();
   }
 

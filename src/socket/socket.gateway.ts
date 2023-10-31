@@ -1,7 +1,6 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessageService } from '../message/message.service';
-import { CreateMessageDto } from '../message/dto/create-message.dto';
 import { SocketService } from './socket.service';
 import { ObjectId, Types } from 'mongoose';
 import { NotificationsService } from '../notifications/notifications.service';

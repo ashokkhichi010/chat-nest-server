@@ -23,6 +23,6 @@ const config = customConfig()
     ],
     controllers: [AuthController],
     providers: [AuthService, TokenService, UsersService, JwtStrategy, DeviceService],
-    exports: [TokenService]
+    exports: [TokenService, DeviceService]
 })
 export class AuthModule { }

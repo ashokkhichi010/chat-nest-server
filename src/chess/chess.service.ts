@@ -1,9 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ChessConnection } from './entities/chess.entity';
-import { Model, ObjectId } from 'mongoose';
-// import square from '../../squares.json';
-
+import { Model, Types } from 'mongoose';
+import { square } from 'src/utils/square';
 
 @Injectable()
 export class ChessService {
@@ -11,22 +10,50 @@ export class ChessService {
     @InjectModel(ChessConnection.name) private readonly chessConnectionModel: Model<ChessConnection>
   ) { }
 
+  isConnectionExist = async (caller: Types.ObjectId, receiver: Types.ObjectId) => {
+    const connection = await this.chessConnectionModel.find({ caller, receiver, status: 'PENDING' });
 
-  isConnectionExist = async (player1: ObjectId, player2: ObjectId) => {
-    const connection = await this.chessConnectionModel.find({ player1, player2, status: 'PENDING' });
-
-    return connection[0];
+    return connection[0] || null;
   };
 
-  connect = async (player1: ObjectId, player2: ObjectId) => {
-    const connectBody = { player1, player2, chessBoard: "square" };
+  connect = async (caller: Types.ObjectId, receiver: Types.ObjectId, deviceId: Types.ObjectId): Promise<ChessConnection> => {
+    const connectBody = {
+      caller: {
+        userId: caller,
+        deviceId
+      },
+      receiver: { userId: receiver },
+    };
 
-    const connection = await this.isConnectionExist(player1, player2) || await this.chessConnectionModel.create(connectBody);
+    const connection = await this.chessConnectionModel.create(connectBody);
 
     return connection;
   };
 
-  getConnection = async (filter) => {
+  disconnect = async (chessConnectionId: Types.ObjectId, userId: Types.ObjectId): Promise<any> => {
+    const connection = await this.chessConnectionModel.findOne({ _id: chessConnectionId, });
+
+    if (!connection) {
+      throw new BadRequestException('messages.chess.connection_not_found')
+    }
+
+    const { caller, receiver } = connection;
+
+    const winner = caller.userId.toString() === userId.toString() ? receiver : caller;
+
+    const updateObj = {
+      status: 'COMPLETED',
+      winner: winner.userId,
+    }
+
+    Object.assign(connection, updateObj);
+    await connection.save()
+
+    return { ...connection.toObject(), winner };
+  };
+
+
+  getConnection = async (filter: Record<string, any>) => {
     const connection = await this.chessConnectionModel.findOne(filter);
 
     if (!connection) {
@@ -56,23 +83,24 @@ export class ChessService {
   //   return movePieceData;
   // };
 
-  accept = async (player2: ObjectId, connectionId: ObjectId) => {
+  accept = async (connectionId: Types.ObjectId, receiverDevice: Types.ObjectId,) => {
+    console.log("🚀 ~ file: chess.service.ts:84 ~ ChessService ~ accept= ~ receiverDevice:", receiverDevice)
     const connection = await this.getConnection({ _id: connectionId });
 
-    const updateObj = {
-      status: 'ACCEPTED',
-      isAccepted: true,
-      acceptedAt: new Date().toISOString(),
-      player2,
-    };
+    connection.status = 'ACCEPTED';
+    connection.isAccepted = true;
+    connection.acceptedAt = new Date();
+    connection.receiver.deviceId = receiverDevice;
+    connection.receiver.captured = [];
+    connection.caller.captured = [];
+    connection.chessBoard = square;
 
-    Object.assign(connection, updateObj);
     await connection.save();
 
     return connection;
   };
 
-  cancel = async (connectionId: ObjectId) => {
+  cancel = async (connectionId: Types.ObjectId) => {
     const connection = await this.getConnection({ _id: connectionId });
 
     const updateObj = {
@@ -87,14 +115,13 @@ export class ChessService {
     return connection;
   };
 
-  reject = async (player2: ObjectId, connectionId: ObjectId) => {
+  reject = async (connectionId: Types.ObjectId) => {
     const connection = await this.getConnection({ _id: connectionId });
 
     const updateObj = {
       status: 'REJECTED',
       isRejected: true,
       rejectedAt: new Date().toISOString(),
-      player2,
     };
 
     Object.assign(connection, updateObj);
@@ -109,7 +136,7 @@ export class ChessService {
 
   //   let player;
   //   if (!lastPlayer) {
-  //     player = connection.player1.toString();
+  //     player = connection.caller.toString();
   //   } else {
   //     player = lastPlayer.player.toString();
   //   }

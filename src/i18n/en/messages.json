@@ -50,6 +50,14 @@
     "alreadyDeleted": "",
     "unauthorized": ""
   },
+  "chess": {
+    "connected": "Chess connection established successfully.",
+    "request_sent": "Chess request sent successfully.",
+    "request_accepted": "Chess request accepted.",
+    "request_canceled": "Chess request canceled successfully.",
+    "request_rejected": "Chess request rejected",
+    "connection_not_found": "Chess connection not found"
+  },
   "LOGIN_SUCCESSFULLY": "Signed in successfully.",
   "LOGIN_UNSUCCESSFULLY": "Email or password is incorrect.",
   "LOGOUT_SUCCESSFULLY": "Sign out successfully.",

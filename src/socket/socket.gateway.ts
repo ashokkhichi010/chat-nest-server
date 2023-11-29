@@ -7,6 +7,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ContactService } from '../contact/contact.service';
 import { UsersService } from '../users/users.service';
 import { Message } from '../message/entities/message.entity';
+import { EmitEventDto } from './dto/create-socket.dto';
 
 @WebSocketGateway({ cors: { origin: process.env.APP_URL, credentials: false }, transports: ['websocket'] })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -30,6 +31,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     const clientServerConnection = await this.socketService.connectClient(clientId, token);
+    if (!clientServerConnection) {
+      return socket.disconnect();
+    }
+
     const { userId, deviceId } = clientServerConnection;
 
     await this.messageService.getNewMessages(userId);
@@ -54,7 +59,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       [contacts, messages] = await Promise.all([contacts, messages]);
 
-      await this.emitEvents(contactUser, 'online', { contacts, messages }, () => { });
+      await this.emitEvents(contactUser, 'online', { contacts, messages, friendId: userId }, () => { });
     }
 
   }
@@ -72,6 +77,32 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     await this.emitEvents(sender, 'message-read', { message: updatedMessage, contacts: contacts1 });
     await this.emitEvents(receiver, 'message-read', { message: updatedMessage, contacts: contacts2 });
+  }
+
+  @SubscribeMessage('connect-chess-connection')
+  async handleChessConnection(@MessageBody() { userId, contactUser }: { userId: ObjectId, contactUser: ObjectId }) {
+    // const updatedMessage = await this.messageService.updateMessage(_id, { isSeen: true, seenAt: new Date().toISOString() })
+
+    // let contacts1: any = this.contactService.getContacts({ userId: sender, limit: 100, page: 1 });
+    // let contacts2: any = this.contactService.getContacts({ userId: receiver, limit: 100, page: 1 });
+
+    // [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
+
+    // await this.emitEvents(sender, 'message-read', { message: updatedMessage, contacts: contacts1 });
+    // await this.emitEvents(receiver, 'message-read', { message: updatedMessage, contacts: contacts2 });
+  }
+
+  @SubscribeMessage('chess-move-piece')
+  async handleChessMovePiece(@MessageBody() { userId, contactUser }: { userId: ObjectId, contactUser: ObjectId }) {
+    // const updatedMessage = await this.messageService.updateMessage(_id, { isSeen: true, seenAt: new Date().toISOString() })
+
+    // let contacts1: any = this.contactService.getContacts({ userId: sender, limit: 100, page: 1 });
+    // let contacts2: any = this.contactService.getContacts({ userId: receiver, limit: 100, page: 1 });
+
+    // [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
+
+    // await this.emitEvents(sender, 'message-read', { message: updatedMessage, contacts: contacts1 });
+    // await this.emitEvents(receiver, 'message-read', { message: updatedMessage, contacts: contacts2 });
   }
 
   async handleDisconnect(socket: Socket) {
@@ -94,9 +125,17 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
-  emitEvents = async (userId: Types.ObjectId, event: string, data: any, callback: Function | null = null) => {
-    const clientIds = await this.socketService.getConnectedClientIds(userId);
-    console.log("🚀 ~ file: socket.gateway.ts:110 ~ emit-event:", event, '-->', clientIds)
+  emitEvents = async (
+    userId: Types.ObjectId,
+    event: string,
+    data: any,
+    callback: Function | null = null,
+    deviceId: Types.ObjectId = null,
+    timeout: number = 2000
+  ) => {
+    const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds(userId);
+    console.log("🚀 ~ file: socket.gateway.ts:133 ~ SocketGateway ~ clientIds:", clientIds)
+
     const customCallback = (err: Error, res: any) => {
       if (!res[0]?.success) {
         const notification = data?.notification;
@@ -104,6 +143,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       }
     }
 
-    clientIds.length && this.server.timeout(2000).to(clientIds).emit(event, data, callback || customCallback);
+    clientIds.length && this.server.timeout(timeout).to(clientIds).emit(event, data, callback || customCallback);
   }
 }

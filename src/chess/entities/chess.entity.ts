@@ -7,44 +7,45 @@ import { userCollection } from "../../users/users.entity";
 export class ChessConnection extends Document {
 
   @Prop({ type: Types.ObjectId, ref: userCollection, required: true })
-  "player1.userId": ObjectId
-
-  @Prop({ type: Types.ObjectId, ref: deviceCollection, required: true })
-  "player1.deviceId": ObjectId
+  caller: {
+    userId: Types.ObjectId;
+    deviceId: Types.ObjectId;
+    captured: string[];
+  };
 
   @Prop({ type: Types.ObjectId, ref: userCollection, required: true })
-  "player2.userId": ObjectId
+  receiver: {
+    userId: Types.ObjectId;
+    deviceId?: Types.ObjectId; // Use `?` for optional fields
+    captured: string[];
+  };
 
-  @Prop({ type: Types.ObjectId, ref: deviceCollection, required: false })
-  "player2.deviceId": ObjectId
-
-  @Prop({ type: Array, required: true })
-  chessBoard: object[]
+  @Prop({ type: Array, required: false, default: null })
+  chessBoard: object[];
 
   @Prop({ type: String, enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELED', 'COMPLETED'], default: 'PENDING' })
-  status: String | string
+  status: String | string;
 
   @Prop({ type: Boolean, default: false })
-  isAccepted: boolean
+  isAccepted: boolean;
 
   @Prop({ type: Date, default: null })
-  acceptedAt: Date
+  acceptedAt: Date;
 
   @Prop({ type: Boolean, default: false })
-  isRejected: boolean
+  isRejected: boolean;
 
   @Prop({ type: Date, default: null })
-  rejectedAt: Date
+  rejectedAt: Date;
 
   @Prop({ type: Boolean, default: false })
-  isCanceled: boolean
+  isCanceled: boolean;
 
   @Prop({ type: Date, default: null })
-  canceledAt: Date
+  canceledAt: Date;
 
   @Prop({ type: Types.ObjectId, ref: userCollection, required: false, default: null })
-  winner: ObjectId
-
+  winner: Types.ObjectId;
 }
 
 export const chessConnectionCollection = 'chess-connections'

@@ -80,7 +80,7 @@ export class AuthController {
       await session.commitTransaction();
 
       return {
-        data: { user, tokens: { access, refresh } },
+        data: { user, tokens: { access, refresh }, device },
         message: 'messages.auth.loginSuccess',
       };
     } catch (error) {

@@ -20,8 +20,23 @@ export class UsersService {
 
   getUserByEmail = async (email: string): Promise<User> => await this.userModel.findOne({ email });
 
-  getUserById = async (id: Types.ObjectId): Promise<User | undefined> => await this.userModel.findById(id);
+  getUserById = async (id: Types.ObjectId): Promise<User | undefined> => {
+    const users = await this.userModel.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(id) }
+      },
+      {
+        $project: {
+          image: { $cond: ["$image", "$image", "https://robohash.org/doloremquesintcorrupti.png"] },
+          name: "$name",
+          email: "$email",
+          role: "$role",
+        }
+      }
+    ]);
 
+    return users[0];
+  }
   create = async (newUserObj: CreateUserDto, session: mongoose.ClientSession = null): Promise<User> => {
     const isEmailExist = await this.getUserByEmail(newUserObj.email);
 

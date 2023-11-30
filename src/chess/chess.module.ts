@@ -21,5 +21,6 @@ import { UsersModule } from 'src/users/users.module';
   ],
   controllers: [ChessController],
   providers: [ChessService, ContactService],
+  exports: [ChessService],
 })
 export class ChessModule { }

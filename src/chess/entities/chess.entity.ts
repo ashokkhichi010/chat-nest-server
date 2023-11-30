@@ -2,26 +2,27 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, ObjectId, Types } from "mongoose";
 import { deviceCollection } from "../../auth/entities/device.entity";
 import { userCollection } from "../../users/users.entity";
+import { ChessPieceDto } from "../dto/create-chess.dto";
 
 @Schema({ timestamps: true })
 export class ChessConnection extends Document {
 
-  @Prop({ type: Types.ObjectId, ref: userCollection, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   caller: {
     userId: Types.ObjectId;
     deviceId: Types.ObjectId;
     captured: string[];
   };
 
-  @Prop({ type: Types.ObjectId, ref: userCollection, required: true })
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   receiver: {
     userId: Types.ObjectId;
-    deviceId?: Types.ObjectId; // Use `?` for optional fields
+    deviceId: Types.ObjectId | null; // You can omit the "= null" here
     captured: string[];
   };
 
   @Prop({ type: Array, required: false, default: null })
-  chessBoard: object[];
+  chessBoard: ChessPieceDto[];
 
   @Prop({ type: String, enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELED', 'COMPLETED'], default: 'PENDING' })
   status: String | string;

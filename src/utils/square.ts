@@ -1,4 +1,4 @@
-export const square: object[] = [
+export const square: { id: string, user: string, piece: string, index: number }[] = [
     {
         id: "A8",
         user: "B",

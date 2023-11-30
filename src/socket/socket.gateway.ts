@@ -7,7 +7,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { ContactService } from '../contact/contact.service';
 import { UsersService } from '../users/users.service';
 import { Message } from '../message/entities/message.entity';
-import { EmitEventDto } from './dto/create-socket.dto';
+import { MoveChessPieceDto } from './dto/create-socket.dto';
+import { ChessService } from 'src/chess/chess.service';
 
 @WebSocketGateway({ cors: { origin: process.env.APP_URL, credentials: false }, transports: ['websocket'] })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -17,6 +18,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly contactService: ContactService,
     private readonly userService: UsersService,
     private readonly notificationService: NotificationsService,
+    private readonly chessService: ChessService,
   ) { }
 
   @WebSocketServer()
@@ -93,7 +95,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('chess-move-piece')
-  async handleChessMovePiece(@MessageBody() { userId, contactUser }: { userId: ObjectId, contactUser: ObjectId }) {
+  async handleChessMovePiece(@MessageBody() { from, to, user, chessConnectionId }: MoveChessPieceDto) {
+    await this.chessService.handleMoveChessPiece(from, to, user, chessConnectionId, this.emitEvents);
+
     // const updatedMessage = await this.messageService.updateMessage(_id, { isSeen: true, seenAt: new Date().toISOString() })
 
     // let contacts1: any = this.contactService.getContacts({ userId: sender, limit: 100, page: 1 });
@@ -103,6 +107,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // await this.emitEvents(sender, 'message-read', { message: updatedMessage, contacts: contacts1 });
     // await this.emitEvents(receiver, 'message-read', { message: updatedMessage, contacts: contacts2 });
+    // callback('your data has been received');
   }
 
   async handleDisconnect(socket: Socket) {

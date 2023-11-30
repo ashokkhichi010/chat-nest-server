@@ -13,6 +13,8 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { Notification, notificationCollection, notificationSchema } from '../notifications/entities/notification.entity';
 import { ContactService } from '../contact/contact.service';
 import { Contact, contactCollection, contactSchema } from '../contact/entities/contact.entity';
+import { ChessService } from 'src/chess/chess.service';
+import { ChessConnection, chessConnectionCollection, chessConnectionSchema } from 'src/chess/entities/chess.entity';
 
 @Module({
     imports: [
@@ -23,11 +25,12 @@ import { Contact, contactCollection, contactSchema } from '../contact/entities/c
             { name: Message.name, schema: messageSchema, collection: messageCollection },
             { name: Notification.name, schema: notificationSchema, collection: notificationCollection },
             { name: Contact.name, schema: contactSchema, collection: contactCollection },
+            { name: ChessConnection.name, schema: chessConnectionSchema, collection: chessConnectionCollection },
         ])
         // AuthModule, UsersModule, MessageModule,
     ],
     controllers: [],
-    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService],
+    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService, ChessService],
     exports: [SocketGateway, SocketService]
 })
 export class SocketModule { }

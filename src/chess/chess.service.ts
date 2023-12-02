@@ -3,13 +3,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { ChessConnection } from './entities/chess.entity';
 import mongoose, { Model, Types } from 'mongoose';
 import { square } from 'src/utils/square';
-import { ChessPieceDto } from './dto/create-chess.dto';
+import { ChessMovePieceDto, ChessPieceDto } from './dto/create-chess.dto';
 import { UsersService } from 'src/users/users.service';
+import * as moment from 'moment';
+import { ChessMove } from './entities/movePiece.entity';
+import { isNotEmpty } from 'class-validator';
 
 @Injectable()
 export class ChessService {
   constructor(
     @InjectModel(ChessConnection.name) private readonly chessConnectionModel: Model<ChessConnection>,
+    @InjectModel(ChessMove.name) private readonly chessMoveModel: Model<ChessMove>,
     private readonly userService: UsersService,
   ) { }
 
@@ -24,9 +28,16 @@ export class ChessService {
       caller: {
         userId: caller,
         deviceId,
-        captured: []
+        captured: [],
+        responseTime: 0,
       },
-      receiver: { userId: receiver, deviceId: null, captured: [] },
+
+      receiver: {
+        userId: receiver,
+        deviceId: null,
+        captured: [],
+        responseTime: 0,
+      },
     };
 
     const connection = await this.chessConnectionModel.create(connectBody);
@@ -55,7 +66,6 @@ export class ChessService {
 
     return { ...connection.toObject(), winner };
   };
-
 
   getConnection = async (filter: Record<string, any>) => {
     const connection = await this.chessConnectionModel.findOne(filter);
@@ -95,12 +105,16 @@ export class ChessService {
         userId: connection.caller.userId,
         deviceId: connection.caller.deviceId,
         captured: [],
+        responseTime: 0,
       },
+
       receiver: {
         userId: connection.receiver.userId,
         deviceId: receiverDevice,
         captured: [],
+        responseTime: 0,
       },
+
       chessBoard: square,
       status: 'ACCEPTED',
       isAccepted: true,
@@ -145,28 +159,53 @@ export class ChessService {
 
   handleMoveChessPiece = async (from: ChessPieceDto, to: ChessPieceDto, user: object, chessConnectionId: Types.ObjectId, emitEvents: Function) => {
     const connection = await this.chessConnectionModel.findOne({ _id: new mongoose.Types.ObjectId(chessConnectionId), status: "ACCEPTED" });
+    const playerId = new mongoose.Types.ObjectId(user['_id'])
 
     if (!connection) {
       throw new BadRequestException('chess connection not found');
     }
 
     const { caller, receiver, ...tempObj } = connection.toObject();
+    const clickTime: Date = moment(user['clickTime']).toDate();
+    const timeDuration = parseInt(user['duration'], 10);
+    const isCaller = caller.userId.toString() === playerId.toString();
 
-    const isCaller = caller.userId.toString() === user['_id'];
+    const callerCaptured: string[] = caller.captured;
+    const receiverCaptured: string[] = receiver.captured;
 
-    const response = await this.movePiece(from, to, caller.captured, receiver.captured, connection.chessBoard);
-    const { callerCaptured, receiverCaptured, chessBoard } = response;
+    const response = await this.movePiece(from, to, connection.chessBoard);
+
+    const { movedPiece, chessBoard } = response;
+    movedPiece && (isCaller ? callerCaptured.push(movedPiece) : receiverCaptured.push(movedPiece));
+    const callerPreResponseTime = caller.responseTime;
+    const receiverPreResponseTime = receiver.responseTime;
+
+    const callerCurrentResponseTime = isCaller ? timeDuration : callerPreResponseTime;
+    const receiverCurrentResponseTime = isCaller ? receiverPreResponseTime : timeDuration;
+
+    await this.createMovePiece({
+      capturedPiece: movedPiece,
+      chessBoard,
+      connectionId: connection._id,
+      duration: isCaller ? timeDuration - callerPreResponseTime : timeDuration - receiverPreResponseTime,
+      from,
+      to,
+      moveTime: clickTime,
+      playerId,
+    })
 
     const updateChessObj = {
       caller: {
         userId: connection.caller.userId,
         deviceId: connection.caller.deviceId,
         captured: callerCaptured,
+        responseTime: callerCurrentResponseTime,
       },
       receiver: {
         userId: connection.receiver.userId,
         deviceId: connection.receiver.deviceId,
         captured: receiverCaptured,
+        responseTime: receiverCurrentResponseTime,
       },
       chessBoard: chessBoard,
     }
@@ -186,8 +225,8 @@ export class ChessService {
     const callerData = {
       ...tempObj,
       players: {
-        self: { ...tempCaller, captured: callerCaptured },
-        other: { ...tempReceiver, captured: receiverCaptured }
+        self: { ...tempCaller, captured: callerCaptured, duration: callerCurrentResponseTime },
+        other: { ...tempReceiver, captured: receiverCaptured, duration: receiverCurrentResponseTime }
       },
       chessBoard: callerChessBoard,
       requestStatus: 'SENT',
@@ -197,8 +236,8 @@ export class ChessService {
     const receiverData = {
       ...tempObj,
       players: {
-        other: { ...tempCaller, captured: callerCaptured },
-        self: { ...tempReceiver, captured: receiverCaptured },
+        other: { ...tempCaller, captured: callerCaptured, duration: callerCurrentResponseTime },
+        self: { ...tempReceiver, captured: receiverCaptured, duration: receiverCurrentResponseTime },
       },
       chessBoard: receiverChessBoard,
       requestStatus: 'RECEIVED',
@@ -207,17 +246,14 @@ export class ChessService {
 
     emitEvents(caller.userId, 'chess-move-piece', { chessData: callerData }, null, caller.deviceId);
     emitEvents(receiver.userId, 'chess-move-piece', { chessData: receiverData }, null, receiver.deviceId);
+    const responseTime = moment().unix() - moment(clickTime).unix();
+    console.log("🚀 ~ file: chess.service.ts:211 ~ ChessService ~ handleMoveChessPiece= ~ responseTime:", responseTime)
   }
 
-  movePiece = async (
-    previousData: ChessPieceDto,
-    currentData: ChessPieceDto,
-    callerCaptured: string[] = [],
-    receiverCaptured: string[] = [],
-    chessBoard: ChessPieceDto[]
-  ) => {
+  movePiece = async (previousData: ChessPieceDto, currentData: ChessPieceDto, chessBoard: ChessPieceDto[]) => {
     const previousIndex = previousData.index;
     const currentIndex = currentData.index;
+    let movedPiece = null
 
     const data = chessBoard.map((data) => {
       const currentDataIndex = data.index;
@@ -225,25 +261,23 @@ export class ChessService {
       if (previousIndex === currentDataIndex) {
         data = { ...data, piece: '', user: '' }
       } else if (currentIndex === currentDataIndex) {
-        delete previousData.index;
-        delete previousData.id;
-        data = { ...data, ...previousData }
-        if (currentData.user === 'A') {
-          receiverCaptured.push(currentData.piece);
-        } else if (currentData.user === 'B') {
-          callerCaptured.push(currentData.piece);
-        }
+        const { id, index, piece, user } = previousData;
+
+        data = { ...data, piece, user }
+
+        movedPiece = !!currentData.user ? currentData.piece : '';
       }
       return data;
     })
 
     return {
       chessBoard: data,
-      callerCaptured,
-      receiverCaptured,
+      movedPiece
     };
 
   }
+
+  createMovePiece = async (moveObj: ChessMovePieceDto) => this.chessMoveModel.create(moveObj);
 
   // move = async (userId, connectionId, from, to) => {
   //   const connection = await this.getConnection({ _id: connectionId });

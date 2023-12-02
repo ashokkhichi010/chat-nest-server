@@ -84,8 +84,8 @@ export class ChessController {
     const callerData = {
       ...tempObj,
       players: {
-        self: { ...tempCaller, captured: [] },
-        other: { ...tempReceiver, captured: [] }
+        self: { ...tempCaller, captured: [], duration: 0 },
+        other: { ...tempReceiver, captured: [], duration: 0 }
       },
       chessBoard: callerChessBoard,
       requestStatus: 'SENT',
@@ -99,8 +99,8 @@ export class ChessController {
       data: {
         ...tempObj,
         players: {
-          self: { ...tempReceiver, captured: [] },
-          other: { ...tempCaller, captured: [] }
+          self: { ...tempReceiver, captured: [], duration: 0 },
+          other: { ...tempCaller, captured: [], duration: 0 }
         },
         chessBoard: receiverChessBoard,
         requestStatus: 'RECEIVED',

@@ -15,6 +15,7 @@ import { ContactService } from '../contact/contact.service';
 import { Contact, contactCollection, contactSchema } from '../contact/entities/contact.entity';
 import { ChessService } from 'src/chess/chess.service';
 import { ChessConnection, chessConnectionCollection, chessConnectionSchema } from 'src/chess/entities/chess.entity';
+import { ChessMove, chessMoveCollection, chessMoveSchema } from 'src/chess/entities/movePiece.entity';
 
 @Module({
     imports: [
@@ -26,6 +27,7 @@ import { ChessConnection, chessConnectionCollection, chessConnectionSchema } fro
             { name: Notification.name, schema: notificationSchema, collection: notificationCollection },
             { name: Contact.name, schema: contactSchema, collection: contactCollection },
             { name: ChessConnection.name, schema: chessConnectionSchema, collection: chessConnectionCollection },
+            { name: ChessMove.name, schema: chessMoveSchema, collection: chessMoveCollection },
         ])
         // AuthModule, UsersModule, MessageModule,
     ],

@@ -12,6 +12,7 @@ export class ChessConnection extends Document {
     userId: Types.ObjectId;
     deviceId: Types.ObjectId;
     captured: string[];
+    responseTime: number;
   };
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
@@ -19,6 +20,7 @@ export class ChessConnection extends Document {
     userId: Types.ObjectId;
     deviceId: Types.ObjectId | null; // You can omit the "= null" here
     captured: string[];
+    responseTime: number;
   };
 
   @Prop({ type: Array, required: false, default: null })

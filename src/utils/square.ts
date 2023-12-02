@@ -290,97 +290,97 @@ export const square: { id: string, user: string, piece: string, index: number }[
     {
         id: "A2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 48
     },
     {
         id: "B2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 49
     },
     {
         id: "C2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 50
     },
     {
         id: "D2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 51
     },
     {
         id: "E2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 52
     },
     {
         id: "F2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 53
     },
     {
         id: "G2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 54
     },
     {
         id: "H2",
         user: "A",
-        piece: "P",
+        piece: "p",
         index: 55
     },
     {
         id: "A1",
         user: "A",
-        piece: "R",
+        piece: "r",
         index: 56
     },
     {
         id: "B1",
         user: "A",
-        piece: "N",
+        piece: "n",
         index: 57
     },
     {
         id: "C1",
         user: "A",
-        piece: "B",
+        piece: "b",
         index: 58
     },
     {
         id: "D1",
         user: "A",
-        piece: "Q",
+        piece: "q",
         index: 59
     },
     {
         id: "E1",
         user: "A",
-        piece: "K",
+        piece: "k",
         index: 60
     },
     {
         id: "F1",
         user: "A",
-        piece: "B",
+        piece: "b",
         index: 61
     },
     {
         id: "G1",
         user: "A",
-        piece: "N",
+        piece: "n",
         index: 62
     },
     {
         id: "H1",
         user: "A",
-        piece: "R",
+        piece: "r",
         index: 63
     }
 ]

@@ -20,6 +20,7 @@ import { MessageModule } from './message/message.module';
 import { SocketModule } from './socket/socket.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { GroupsModule } from './groups/groups.module';
+import { CallModule } from './call/call.module';
 
 const config = customConfig()
 
@@ -51,6 +52,7 @@ const config = customConfig()
         ContactModule,
         NotificationsModule,
         GroupsModule,
+        CallModule,
     ],
     controllers: [],
     providers: [

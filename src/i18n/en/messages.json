@@ -50,6 +50,9 @@
     "alreadyDeleted": "",
     "unauthorized": ""
   },
+  "call": {
+    "request_sent": "Call request sent successfully."
+  },
   "chess": {
     "connected": "Chess connection established successfully.",
     "request_sent": "Chess request sent successfully.",

@@ -110,6 +110,28 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // callback('your data has been received');
   }
 
+  // @SubscribeMessage('call-request')
+  // async handleIncomingCall(@MessageBody() callInfo: {
+  //   type: string,
+  //   receiver: string,
+  //   receiverName: string,
+  //   caller: string,
+  //   callerName: string,
+  //   status: string,
+  // }) {
+  //   console.log("🚀 ~ file: socket.gateway.ts:115 ~ SocketGateway ~ handleIncomingCall ~ callInfo:", callInfo)
+
+  //   // const updatedMessage = await this.messageService.updateMessage(_id, { isSeen: true, seenAt: new Date().toISOString() })
+
+  //   // let contacts1: any = this.contactService.getContacts({ userId: sender, limit: 100, page: 1 });
+  //   // let contacts2: any = this.contactService.getContacts({ userId: receiver, limit: 100, page: 1 });
+
+  //   // [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
+
+  //   // await this.emitEvents(sender, 'message-read', { message: updatedMessage, contacts: contacts1 });
+  //   // await this.emitEvents(receiver, 'message-read', { message: updatedMessage, contacts: contacts2 });
+  // }
+
   async handleDisconnect(socket: Socket) {
     const clientServerConnection = await this.socketService.disconnectClient(socket.id);
 
@@ -139,7 +161,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     timeout: number = 2000
   ) => {
     const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds(userId);
-    console.log("🚀 ~ file: socket.gateway.ts:133 ~ SocketGateway ~ clientIds:", clientIds)
+    console.log("🚀 ~ file: socket.gateway.ts:133 ~ SocketGateway ~ userId, event, clientIds:", userId, event, clientIds)
 
     const customCallback = (err: Error, res: any) => {
       if (!res[0]?.success) {

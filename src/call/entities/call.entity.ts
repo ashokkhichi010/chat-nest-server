@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
+import { userCollection } from "src/users/users.entity";
 
 @Schema({ timestamps: true })
 export class CallS extends Document {
@@ -23,6 +24,12 @@ export class CallS extends Document {
 
     @Prop({ type: String, enum: ['VOICE', 'VIDEO'], default: 'VOICE' })
     type: string;
+
+    @Prop({ type: Types.ObjectId, ref: userCollection, default: null })
+    disconnectedBy: Types.ObjectId | null;
+
+    @Prop({ type: Date, default: null })
+    disconnectedAt: Date;
 
     @Prop({ type: Boolean, default: false })
     isAccepted: boolean;

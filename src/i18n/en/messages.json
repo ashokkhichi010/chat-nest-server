@@ -51,7 +51,16 @@
     "unauthorized": ""
   },
   "call": {
-    "request_sent": "Call request sent successfully."
+    "connected": "Call connection established successfully.",
+    "request_sent": "Call request sent successfully.",
+    "request_accepted": "Call request accepted.",
+    "request_canceled": "Call request canceled successfully.",
+    "request_rejected": "Call request rejected",    
+    "not_found": "Call connection request not found",
+    "accepted": "You Cannot [ cancel / reject / accept ] Call connection request.Because You have already connected to that user.",
+    "rejected": "Sorry, Call connection has already rejected your friend request.",
+    "cancelled": "Cancellation successful: The Call connection request you sent to [Username] has been withdrawn.",
+    "completed": "You Cannot [ cancel / reject / accept ] Call connection request.Because this Call connection has already COMPLETED."
   },
   "chess": {
     "connected": "Chess connection established successfully.",

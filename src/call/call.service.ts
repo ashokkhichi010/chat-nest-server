@@ -38,40 +38,37 @@ export class CallService {
       throw new BadRequestException('messages.chess.connection_not_found')
     }
 
-    const { caller, receiver } = connection;
-
-    const winner = caller.userId.toString() === userId.toString() ? receiver : caller;
-
     const updateObj = {
       status: 'COMPLETED',
-      winner: winner.userId,
+      disconnectedBy: userId,
+      disconnectedAt: new Date(),
     }
 
     Object.assign(connection, updateObj);
     await connection.save()
 
-    return { ...connection.toObject(), winner };
+    return connection;
   };
 
   getConnection = async (filter: Record<string, any>) => {
     const connection = await this.callModel.findOne(filter);
 
     if (!connection) {
-      throw new BadRequestException('messages.CHESS_CONNECTION_NOT_FOUND');
+      throw new BadRequestException('messages.call.not_found');
     }
 
     switch (connection.status) {
       case 'ACCEPTED': {
-        throw new BadRequestException('messages.CHESS_CONNECTION_ACCEPTED');
+        throw new BadRequestException('messages.call.accepted');
       }
       case 'REJECTED': {
-        throw new BadRequestException('messages.CHESS_CONNECTION_REJECTED');
+        throw new BadRequestException('messages.call.rejected');
       }
       case 'CANCELED': {
-        throw new BadRequestException('messages.CHESS_CONNECTION_CANCELED');
+        throw new BadRequestException('messages.call.cancelled');
       }
       case 'COMPLETED': {
-        throw new BadRequestException('messages.CHESS_CONNECTION_COMPLETED');
+        throw new BadRequestException('messages.call.completed');
       }
     }
 
@@ -85,18 +82,13 @@ export class CallService {
       caller: {
         userId: connection.caller.userId,
         deviceId: connection.caller.deviceId,
-        captured: [],
-        responseTime: 0,
       },
 
       receiver: {
         userId: connection.receiver.userId,
         deviceId: receiverDevice,
-        captured: [],
-        responseTime: 0,
       },
 
-      chessBoard: square,
       status: 'ACCEPTED',
       isAccepted: true,
       acceptedAt: new Date(),

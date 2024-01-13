@@ -20,7 +20,7 @@ export class UsersService {
 
   getUserByEmail = async (email: string): Promise<User> => await this.userModel.findOne({ email });
 
-  getUserById = async (id: Types.ObjectId): Promise<User | undefined> => {
+  getUserById = async (id: Types.ObjectId | string): Promise<User | undefined> => {
     const users = await this.userModel.aggregate([
       {
         $match: { _id: new mongoose.Types.ObjectId(id) }

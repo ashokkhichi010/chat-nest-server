@@ -250,6 +250,15 @@ export class ContactService {
           lastMessage: { $cond: ["$messages.lastMessage", "$messages.lastMessage", {}] },
           unSeenMessages: { $cond: ["$messages.unSeenMessages.count", "$messages.unSeenMessages.count", 0] },
           lastMessageCreatedAt: { $cond: ["$messages.lastMessage.createdAt", "$messages.lastMessage.createdAt", null] },
+          isLastMessageSent: {
+            $cond: {
+              if: {
+                $eq: ["$messages.lastMessage.sender", userIdAsObjectId]
+              },
+              then: true,
+              else: false
+            }
+          },
         }
       }
     ];

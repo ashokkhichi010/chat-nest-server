@@ -183,17 +183,6 @@ export class ChessService {
     const callerCurrentResponseTime = isCaller ? timeDuration : callerPreResponseTime;
     const receiverCurrentResponseTime = isCaller ? receiverPreResponseTime : timeDuration;
 
-    await this.createMovePiece({
-      capturedPiece: movedPiece,
-      chessBoard,
-      connectionId: connection._id,
-      duration: isCaller ? timeDuration - callerPreResponseTime : timeDuration - receiverPreResponseTime,
-      from,
-      to,
-      moveTime: clickTime,
-      playerId,
-    })
-
     const updateChessObj = {
       caller: {
         userId: connection.caller.userId,
@@ -211,9 +200,22 @@ export class ChessService {
     }
 
     Object.assign(connection, updateChessObj);
-    await connection.save();
 
-    const [tempCaller, tempReceiver] = await Promise.all([this.userService.getUserById(caller.userId), this.userService.getUserById(receiver.userId)])
+    const [tempCaller, tempReceiver, movePiece, updatedConnection] = await Promise.all([
+      this.userService.getUserById(caller.userId),
+      this.userService.getUserById(receiver.userId),
+      this.createMovePiece({
+        capturedPiece: movedPiece,
+        chessBoard,
+        connectionId: connection._id,
+        duration: isCaller ? timeDuration - callerPreResponseTime : timeDuration - receiverPreResponseTime,
+        from,
+        to,
+        moveTime: clickTime,
+        playerId,
+      }),
+      connection.save(),
+    ])
 
     const callerChessBoard = chessBoard;
     const receiverChessBoard = [];

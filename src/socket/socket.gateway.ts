@@ -110,6 +110,14 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // callback('your data has been received');
   }
 
+  @SubscribeMessage('web-rtc')
+  async handleWebRTC(@MessageBody() { offer, answer, userId }: { offer: any, answer: any, userId: Types.ObjectId }) {
+    console.log("🚀 ~ file: socket.gateway.ts:115 ~ SocketGateway ~ handleWebRTC ~ userId:", userId)
+    console.log("🚀 ~ file: socket.gateway.ts:115 ~ SocketGateway ~ handleWebRTC ~ offer:", offer)
+    console.log("🚀 ~ file: socket.gateway.ts:115 ~ SocketGateway ~ handleWebRTC ~ answer:", answer)
+    this.emitEvents(userId, 'web-rtc', { offer, answer });
+  }
+
   // @SubscribeMessage('call-request')
   // async handleIncomingCall(@MessageBody() callInfo: {
   //   type: string,

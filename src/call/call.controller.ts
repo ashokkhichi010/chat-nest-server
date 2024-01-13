@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Headers } from '@nestjs/common';
+import { Controller, Get, Param, Headers, Body, Post } from '@nestjs/common';
 import { Roles } from '../decorators/roles.decorator';
 import { ContactService } from '../contact/contact.service';
 import { AuthUser } from 'src/decorators/user.decorator';
@@ -22,8 +22,10 @@ export class CallController {
   ) { }
 
   @Roles('user')
-  @Get('connect/:type/:contactUser')
-  async getConnect(@AuthUser() user: User, @Headers() headers: any, @Param("contactUser", CustomObjectId) contactUser: Types.ObjectId, @Param() params: { type: string }) {
+  // @Get('connect/:type/:contactUser')
+  // async getConnect(@AuthUser() user: User, @Headers() headers: any, @Param("contactUser", CustomObjectId) contactUser: Types.ObjectId, @Param() params: { type: string }) {
+  @Post('connect/:contactUser')
+  async getConnect(@AuthUser() user: User, @Headers() headers: any, @Body() body: { type: string, offer: any }, @Param("contactUser", CustomObjectId) contactUser: Types.ObjectId) {
     const caller = user;
     const userId = caller._id;
     const deviceId: Types.ObjectId = new mongoose.Types.ObjectId(headers['device_id']);
@@ -32,12 +34,13 @@ export class CallController {
     const connectionId: string = getConnectionId(userId, contactUser);
     await this.contactService.isContactExist(connectionId);
 
-    const result: CallS = await this.callService.createCall(userId, contactUser, deviceId, params.type);
+    const result: CallS = await this.callService.createCall(userId, contactUser, deviceId, body.type);
     const receiver = await this.userService.getUserById(contactUser);
 
     const timeOut = moment().add(60, 'seconds').toISOString();
 
     this.socketGateway.emitEvents(contactUser, 'call-request', { callData: { ...result.toObject(), caller, receiver, requestStatus: 'RECEIVED', timeOut } });
+    this.socketGateway.emitEvents(contactUser, 'web-rtc', { offer: body.offer, type: body.type });
 
     return {
       message: "messages.call.request_sent",
@@ -64,8 +67,8 @@ export class CallController {
   }
 
   @Roles('user')
-  @Get(':callId/accept')
-  async acceptCall(@AuthUser() user: User, @Headers() headers: any, @Param("callId", CustomObjectId) callId: Types.ObjectId) {
+  @Post(':callId/accept')
+  async acceptCall(@AuthUser() user: User, @Headers() headers: any, @Param("callId", CustomObjectId) callId: Types.ObjectId, @Body() body: { answer: any }) {
     const deviceId: Types.ObjectId = new mongoose.Types.ObjectId(headers['device_id']);
 
     const result: CallS = await this.callService.accept(callId, deviceId);
@@ -82,6 +85,7 @@ export class CallController {
     };
 
     this.socketGateway.emitEvents(caller.userId, 'call-request', { callData: callerData }, null, caller.deviceId);
+    this.socketGateway.emitEvents(caller.userId, 'web-rtc', { answer: body.answer }, null, caller.deviceId);
 
     return {
       message: "messages.call.request_accepted",

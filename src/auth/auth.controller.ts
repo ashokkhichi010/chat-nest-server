@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post, NotFoundException, HttpCode } from '@nestjs/common';
+import { Body, Controller, Headers, Post, NotFoundException, HttpCode, Get, Param, NotAcceptableException } from '@nestjs/common';
 import { AuthService } from './services/auth.service';
 import { TokenService } from './services/token.service';
 import { DeviceService } from './services/device.service';
@@ -9,6 +9,7 @@ import { Device } from './entities/device.entity';
 import { ClientSession, Connection } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { customConfig } from '../config/config';
+import { ContactNumberDto } from 'src/users/users.dto';
 
 const config = customConfig()
 
@@ -182,6 +183,32 @@ export class AuthController {
       throw error;
     } finally {
       session.endSession();
+    }
+  }
+
+  @Post('is-credentials-already-used')
+  @HttpCode(200)
+  async check(@Body() body: { type: string, value: any }) {
+    try {
+      const type = body.type;
+      const value = body.value;
+
+      if (!["email", "contactNumber"].includes(type)) {
+        throw new NotAcceptableException(`messages.auth.invaliedInputOfCheckEmailAndPhone`);
+      }
+
+      const user =
+        type === 'email'
+          ? await this.userService.getUserByEmail(value)
+          : await this.userService.getUserByContactNumber(value);
+
+      if (user) {
+        throw new NotAcceptableException(`messages.auth.${type}AlreadyRegistered`);
+      }
+
+      return { message: 'messages.auth.success' };
+    } catch (error) {
+      throw error;
     }
   }
 }

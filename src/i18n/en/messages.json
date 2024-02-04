@@ -3,6 +3,7 @@
     "check": "App is working......"
   },
   "auth": {
+    "success": "success",
     "signUp": "Your account has been created successfully.",
     "resendVerificationEmail": "Verification email has been sent successfully",
     "forgotPasswordEmailSent": "Forgot Password email has been sent successfully",
@@ -22,6 +23,9 @@
     "verifyResetPasswordToken": "token is valid",
     "resetPassword": "your password has been changed",
     "unauthorized": "Not Authorized",
+    "invaliedInputOfCheckEmailAndPhone": "Invalid type",
+    "emailAlreadyRegistered": "Your email is already registered",
+    "contactNumberAlreadyRegistered": "Your phone number is already registered",
     "please_authenticate": "Please authenticate."
   },
   "token": {
@@ -55,7 +59,7 @@
     "request_sent": "Call request sent successfully.",
     "request_accepted": "Call request accepted.",
     "request_canceled": "Call request canceled successfully.",
-    "request_rejected": "Call request rejected",    
+    "request_rejected": "Call request rejected",
     "not_found": "Call connection request not found",
     "accepted": "You Cannot [ cancel / reject / accept ] Call connection request.Because You have already connected to that user.",
     "rejected": "Sorry, Call connection has already rejected your friend request.",

@@ -39,8 +39,8 @@ export class UserController {
 
   @Roles('admin')
   @Post(':userId')
-  async updateUser(@Param() userId: Types.ObjectId, @Body() { name, mobileNumber }: UpdateUserDto): Promise<object | undefined> {
-    await this.userService.updateUserById(userId, { name, mobileNumber });
+  async updateUser(@Param() userId: Types.ObjectId, @Body() { name, contactNumber }: UpdateUserDto): Promise<object | undefined> {
+    await this.userService.updateUserById(userId, { name, contactNumber });
     return { message: 'messages.user.updated' };
   }
 

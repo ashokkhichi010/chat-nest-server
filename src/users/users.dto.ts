@@ -2,11 +2,16 @@ import { PartialType } from '@nestjs/mapped-types';
 import { Types } from 'mongoose';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 
+export class ContactNumberDto {
+  countryCode: string;
+  phoneNumber: string;
+}
+
 export class CreateUserDto {
   name: string;
   email: string;
   password: string;
-  mobileNumber: Number;
+  contactNumber: ContactNumberDto;
   role: string | null | undefined;
   isEmailVerified: boolean | null | undefined;
   isActive: boolean | null | undefined;

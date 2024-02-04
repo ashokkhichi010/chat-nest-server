@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { ClientSession, Model, ObjectId, Types } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from './users.entity';
-import { CreateUserDto, UpdateUserDto, UserListDto } from './users.dto';
+import { ContactNumberDto, CreateUserDto, UpdateUserDto, UserListDto } from './users.dto';
 import { customConfig } from '../config/config';
 import { contactCollection } from '../contact/entities/contact.entity';
 import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
@@ -19,6 +19,8 @@ export class UsersService {
   hashPassword = async (password: string): Promise<string> => await bcrypt.hash(password, config.BCRYPT_SALT);
 
   getUserByEmail = async (email: string): Promise<User> => await this.userModel.findOne({ email });
+
+  getUserByContactNumber = async (contactNumber: ContactNumberDto): Promise<User> => await this.userModel.findOne({ contactNumber });
 
   getUserById = async (id: Types.ObjectId | string): Promise<User | undefined> => {
     const users = await this.userModel.aggregate([
@@ -37,11 +39,18 @@ export class UsersService {
 
     return users[0];
   }
+
   create = async (newUserObj: CreateUserDto, session: mongoose.ClientSession = null): Promise<User> => {
     const isEmailExist = await this.getUserByEmail(newUserObj.email);
 
     if (isEmailExist) {
       throw new NotAcceptableException('messages.auth.alreadyRegistered');
+    }
+
+    const isContactNumberExist = await this.getUserByContactNumber(newUserObj.contactNumber);
+
+    if (isContactNumberExist) {
+      throw new NotAcceptableException('messages.auth.contactNumberAlreadyRegistered');
     }
 
     newUserObj.password = await this.hashPassword(newUserObj.password);
@@ -138,7 +147,7 @@ export class UsersService {
         name: "$name",
         email: "$email",
         image: "$image",
-        phoneNumber: "$phoneNumber",
+        contactNumber: "$contactNumber",
         contactInfo: { $cond: ['$contactInfo', '$contactInfo', null] }
       }
     }];

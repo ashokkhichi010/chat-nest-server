@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { ContactNumberDto } from './users.dto';
 
 @Schema({ timestamps: true })
 export class User extends Document {
@@ -15,8 +16,8 @@ export class User extends Document {
   @Prop({ type: String, required: false, trim: true })
   image: string;
 
-  @Prop({ type: Number, required: false, trim: true })
-  phoneNumber: number;
+  @Prop({ type: Object, required: true })
+  contactNumber: ContactNumberDto;
 
   @Prop({ type: String, required: true, trim: true, enum: ['admin', 'user'], default: 'user' })
   role: string;

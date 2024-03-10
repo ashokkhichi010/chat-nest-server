@@ -9,6 +9,8 @@ import { UsersService } from '../users/users.service';
 import { Message } from '../message/entities/message.entity';
 import { MoveChessPieceDto } from './dto/create-socket.dto';
 import { ChessService } from 'src/chess/chess.service';
+import { DeviceService } from 'src/auth/services/device.service';
+import { DeviceHeadersDto } from 'src/auth/dto/device.dto';
 
 @WebSocketGateway({ cors: { origin: process.env.APP_URL, credentials: false }, transports: ['websocket'] })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -19,6 +21,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly userService: UsersService,
     private readonly notificationService: NotificationsService,
     private readonly chessService: ChessService,
+    private readonly deviceService: DeviceService,
   ) { }
 
   @WebSocketServer()
@@ -30,6 +33,9 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     if (!token) {
       return socket.disconnect();
+    } else if (token === "QR_CODE") {
+      console.log("🚀 ~ SocketGateway ~ handleConnection ~ token:", token)
+      return;
     }
 
     const clientServerConnection = await this.socketService.connectClient(clientId, token);
@@ -47,7 +53,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let users1: any = this.userService.getUsers({ userId, limit: 100, page: 1, search: "" });
 
     [contacts1, users1] = await Promise.all([contacts1, users1]);
-    this.emitEvents(userId, 'online', { contacts: contacts1, users: users1 }, () => { });
+    this.emitEvents(userId, 'online', { contacts: contacts1, users: users1 }, () => { }, deviceId);
 
     const contactsId: Types.ObjectId[] = [];
     contacts1.results.forEach((obj: { _id: Types.ObjectId, onlineStatus: Record<string, any> }) => {
@@ -64,6 +70,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.emitEvents(contactUser, 'online', { contacts, messages, friendId: userId }, () => { });
     }
 
+  }
+
+  @SubscribeMessage('connect-new-device')
+  async handleNewDeviceConnection(@MessageBody() { clientId, deviceId, refreshToken, headers }: { clientId: string, deviceId: string, refreshToken: string, headers: DeviceHeadersDto }) {
+    clientId && await this.deviceService.connectNewDevice(refreshToken, deviceId, clientId, headers, this.emitEvents, this.socketService.saveClientData);
   }
 
   @SubscribeMessage('message-read')
@@ -169,7 +180,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     timeout: number = 2000
   ) => {
     const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds(userId);
-    console.log("🚀 ~ file: socket.gateway.ts:133 ~ SocketGateway ~ userId, event, clientIds:", userId, event, clientIds)
+    console.log({ userId, deviceId, event, clientIds })
 
     const customCallback = (err: Error, res: any) => {
       if (!res[0]?.success) {

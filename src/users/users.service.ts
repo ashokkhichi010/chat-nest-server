@@ -33,6 +33,7 @@ export class UsersService {
           name: "$name",
           email: "$email",
           role: "$role",
+          contactNumber: "$contactNumber"
         }
       }
     ]);

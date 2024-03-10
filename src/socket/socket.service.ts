@@ -17,6 +17,8 @@ export class SocketService {
   config = customConfig();
 
   saveClientData = async (userId: Types.ObjectId, deviceId: Types.ObjectId, clientId: string): Promise<SocketConnection> => {
+    userId = new Types.ObjectId(userId);
+    deviceId = new Types.ObjectId(deviceId);
     const clientServerObj = { userId, deviceId, clientId, status: 'CONNECTED' };
 
     let csc = await this.socketConnection.findOne({ userId, deviceId }).sort({ createdAt: -1 });
@@ -112,6 +114,8 @@ export class SocketService {
   // };
 
   getClientId = async ({ userId, deviceId }) => {
+    userId = new Types.ObjectId(userId);
+    deviceId = new Types.ObjectId(deviceId);
     const csc = await this.socketConnection.findOne({ userId, deviceId, status: "CONNECTED" });
 
     return csc ? csc.clientId : ''

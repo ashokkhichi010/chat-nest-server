@@ -3,13 +3,23 @@ import { Device } from '../entities/device.entity';
 import { ClientSession, Model, ObjectId, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateDeviceDto, DeviceHeadersDto, GetDeviceDto, UpdateDeviceDto } from '../dto/device.dto';
+import { TokenService } from './token.service';
+import { customConfig } from '../../config/config';
+import { UsersService } from 'src/users/users.service';
 
+const config = customConfig()
 @Injectable()
 export class DeviceService {
-  constructor(@InjectModel(Device.name) private deviceModel: Model<Device>) { }
+  constructor(
+    private readonly tokenService: TokenService,
+    private readonly userService: UsersService,
+    @InjectModel(Device.name) private deviceModel: Model<Device>) { }
 
-  createDevice = async (deviceObj: CreateDeviceDto, session: ClientSession): Promise<Device | undefined> => {
-    const device = await this.deviceModel.create([deviceObj], { session })
+  createDevice = async (deviceObj: CreateDeviceDto, session: ClientSession = null): Promise<Device | undefined> => {
+    const options = {}
+    session && (options["session"] = session);
+
+    const device = await this.deviceModel.create([deviceObj], options);
     return device[0];
   }
 
@@ -21,7 +31,7 @@ export class DeviceService {
 
   logoutDevice = async (deviceId: Types.ObjectId, session: ClientSession): Promise<Device | Error> => await this.updateDevice(deviceId, { lastLogout: new Date(), loginStatus: 'LOGOUT' }, session);
 
-  async loginDevice(userId: Types.ObjectId, headers: DeviceHeadersDto, session: ClientSession): Promise<Device> {
+  async loginDevice(userId: Types.ObjectId, headers: DeviceHeadersDto, session: ClientSession = null): Promise<Device> {
     const appEnvironment = headers['environment'];
     const deviceType = headers['device-type'];
     const deviceName = headers['device-name'];
@@ -46,7 +56,7 @@ export class DeviceService {
   }
 
 
-  async updateDevice(deviceId: Types.ObjectId, updateOnj: UpdateDeviceDto, session: ClientSession): Promise<Device> {
+  async updateDevice(deviceId: Types.ObjectId, updateOnj: UpdateDeviceDto, session: ClientSession = null): Promise<Device> {
     const device = await this.getDeviceById(deviceId);
 
     if (!device) {
@@ -54,6 +64,30 @@ export class DeviceService {
     }
 
     Object.assign(device, updateOnj);
-    return await device.save({ session });
+    const options = {}
+    session && (options["session"] = session);
+    return await device.save(options);
+  }
+
+  connectNewDevice = async (refreshToken: string, oldDeviceId: string, newClientId: string, newDeviceHeaders: DeviceHeadersDto, emitEvents: Function, saveClientData: Function) => {
+    const token = await this.tokenService.verifyToken(refreshToken, config.TOKEN_TYPES.REFRESH);
+    const userId = token.user;
+
+    const user = await this.userService.getUserById(userId);
+    if (!user) {
+      return;
+    }
+    const device: Device = await this.loginDevice(user.id, newDeviceHeaders);
+    const clientServerConnection = await saveClientData(user._id, device.id, newClientId);
+
+    await this.tokenService.removeTokens({ user: user._id, device: device._id, session: null, type: null });
+
+    let access = this.tokenService.getAccessToken(user._id, device._id);
+    let refresh = this.tokenService.getAndSaveRefreshToken(user._id, device._id);
+
+    [access, refresh] = await Promise.all([access, refresh]);
+
+    emitEvents(user._id, "qr-code-response-new-device", { tokens: { access, refresh }, user, device }, null, device.id, () => { });
+    emitEvents(user._id, "qr-code-response-old-device", { success: true }, null, oldDeviceId, () => { });
   }
 }

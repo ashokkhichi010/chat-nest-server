@@ -16,6 +16,8 @@ import { Contact, contactCollection, contactSchema } from '../contact/entities/c
 import { ChessService } from 'src/chess/chess.service';
 import { ChessConnection, chessConnectionCollection, chessConnectionSchema } from 'src/chess/entities/chess.entity';
 import { ChessMove, chessMoveCollection, chessMoveSchema } from 'src/chess/entities/movePiece.entity';
+import { DeviceService } from 'src/auth/services/device.service';
+import { Device, deviceCollection, deviceSchema } from 'src/auth/entities/device.entity';
 
 @Module({
     imports: [
@@ -28,11 +30,12 @@ import { ChessMove, chessMoveCollection, chessMoveSchema } from 'src/chess/entit
             { name: Contact.name, schema: contactSchema, collection: contactCollection },
             { name: ChessConnection.name, schema: chessConnectionSchema, collection: chessConnectionCollection },
             { name: ChessMove.name, schema: chessMoveSchema, collection: chessMoveCollection },
+            { name: Device.name, schema: deviceSchema, collection: deviceCollection },
         ])
         // AuthModule, UsersModule, MessageModule,
     ],
     controllers: [],
-    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService, ChessService],
+    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService, ChessService, DeviceService],
     exports: [SocketGateway, SocketService]
 })
 export class SocketModule { }

@@ -33,6 +33,7 @@ export class MessageService {
     const skip = (page - 1) * limit;
 
     const match: any = { connectionId: connectionId || getConnectionId(userId, contactUser) };
+    match['isDeleted'] = false;
 
     if (search) {
       match['$or'].push({ message: new RegExp(search, 'i') });
@@ -112,10 +113,10 @@ export class MessageService {
       throw new BadRequestException("messages.message.alreadyDeleted");
     }
 
-    const sender = messageData.sender;
-    const receiver = messageData.receiver;
+    const sender = messageData.sender.toString();
+    const receiver = messageData.receiver.toString();
 
-    if (userId !== sender && contactUser !== receiver) {
+    if (userId.toString() !== sender && contactUser.toString() !== receiver) {
       throw new UnauthorizedException("messages.message.unauthorized")
     }
 

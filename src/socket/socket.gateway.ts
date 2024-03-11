@@ -53,6 +53,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     let users1: any = this.userService.getUsers({ userId, limit: 100, page: 1, search: "" });
 
     [contacts1, users1] = await Promise.all([contacts1, users1]);
+    //  this deviceId is used because of we should send response back only for these device which requests new connection insted of all connected device for that user.
     this.emitEvents(userId, 'online', { contacts: contacts1, users: users1 }, () => { }, deviceId);
 
     const contactsId: Types.ObjectId[] = [];
@@ -80,7 +81,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('message-read')
   async handleMessageRead(@MessageBody() messageObj: Message) {
     const { _id, sender, receiver } = messageObj;
-    console.log("🚀 ~ file: socket.gateway.ts:224 ~ SocketGateway ~ handleMessageRead ~ _id:", _id);
     const updatedMessage = await this.messageService.updateMessage(_id, { isSeen: true, seenAt: new Date().toISOString() })
 
     let contacts1: any = this.contactService.getContacts({ userId: sender, limit: 100, page: 1 });

@@ -140,7 +140,7 @@ export class ContactService {
               $match: {
                 $expr: {
                   $and: [
-                    { $eq: ["$userId", "$$contactUser",], },
+                    { $eq: ["$userId", "$$contactUser"] },
                     // { $eq: ["$status", "CONNECTED"] },
                   ],
                 },
@@ -187,6 +187,7 @@ export class ContactService {
             {
               $facet: {
                 lastMessage: [
+                  { $match: { isDeleted: false } },
                   {
                     $sort: {
                       createdAt: -1

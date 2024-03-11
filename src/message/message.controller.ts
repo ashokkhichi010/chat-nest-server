@@ -107,8 +107,6 @@ export class MessageController {
   @Delete(':contactUser/:messageId')
   async deleteMessage(
     @AuthUser() user: User,
-    @Body() body: MessageListDto,
-    @Headers() headers,
     @Param() params: { contactUser: Types.ObjectId, messageId: Types.ObjectId }
   ) {
     const userId = user._id;
@@ -118,8 +116,15 @@ export class MessageController {
 
     await this.messageService.deleteMessage(userId, contactUser, messageId);
 
+    let contacts1: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
+    let contacts2: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
+    [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
+
+    this.socketGateway.emitEvents(contactUser, 'message-deleted', { messageId, contacts: contacts2 }, null);
+
     return {
-      message: "messages.message.deleted"
+      message: "messages.message.deleted",
+      data: { messageId, contacts: contacts1 }
     }
   }
 }

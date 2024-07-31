@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, Get, Param, UnauthorizedException, NotAcceptableException } from '@nestjs/common';
+import { Controller, Post, Body, Headers, Get, Param,  NotAcceptableException } from '@nestjs/common';
 import { LudoService } from './ludo.service';
 import { Roles } from 'src/decorators/roles.decorator';
 import { User } from 'src/users/users.entity';
@@ -7,6 +7,7 @@ import mongoose, { Types } from 'mongoose';
 import { CustomObjectId } from 'src/pipes/customObjectId.pipe';
 import { SocketGateway } from 'src/socket/socket.gateway';
 import { compairMongoId } from 'src/utils/helper';
+import { DeviceHeadersDto } from 'src/auth/dto/device.dto';
 // import { CreateLudoDto } from './dto/create-ludo.dto';
 
 @Controller('ludo')
@@ -18,7 +19,7 @@ export class LudoController {
 
   @Roles('user')
   @Get('create-room')
-  async createRoom(@AuthUser() user: User, @Headers() headers: any) {
+  async createRoom(@AuthUser() user: User, @Headers() headers: DeviceHeadersDto) {
     const userId = user._id;
     const deviceId: Types.ObjectId = new mongoose.Types.ObjectId(headers['device_id']);
 
@@ -49,7 +50,6 @@ export class LudoController {
 
     return {
       message: "messages.ludo.request_sent",
-      data: {},
     }
   }
 
@@ -74,7 +74,6 @@ export class LudoController {
 
     return {
       message: "messages.ludo.joined",
-      data: {}
     }
   }
 

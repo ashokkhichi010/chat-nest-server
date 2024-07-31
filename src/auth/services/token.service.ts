@@ -4,7 +4,7 @@ import { Model, ObjectId, ClientSession, Types } from 'mongoose';
 import { Token } from '../entities/token.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as moment from 'moment';
-import { removeTokenDto } from '../dto/create-auth.dto';
+import { RemoveTokenDto } from '../dto/create-auth.dto';
 import { CreateTokenDto, GenerateTokenDto } from '../dto/token.dto';
 import { customConfig } from '../../config/config';
 
@@ -98,7 +98,7 @@ export class TokenService {
    * @param param0 
    */
 
-  async removeTokens({ user, device, type, session }: removeTokenDto): Promise<any> {
+  async removeTokens({ user, device, type, session }: RemoveTokenDto): Promise<any> {
     const where = { user, device, type };
 
     const options = session || {}

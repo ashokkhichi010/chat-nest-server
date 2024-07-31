@@ -1,31 +1,36 @@
-import { BadRequestException } from '@nestjs/common';
 import { Type } from 'class-transformer';
-import { IsArray, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber, IsObject, IsOptional, IsPositive, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsNotEmptyObject, IsNumber,  IsOptional, IsPositive, IsString } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum SortOrder { ASC = 'ASC', DESC = 'DESC' }
 
 export class PaginationQueryDto {
   @IsString()
   @IsOptional()
-  sortKey: string;
+  @ApiPropertyOptional({ description: 'Key to sort the results by', example: 'createdAt' })
+  sortKey?: string;
 
   @IsEnum(SortOrder)
   @IsOptional()
-  sortOrder: string;
+  @ApiPropertyOptional({ description: 'Order to sort the results in', enum: SortOrder, example: SortOrder.ASC })
+  sortOrder?: SortOrder;
 
   @IsOptional()
   @IsPositive()
   @Type(() => Number)
+  @ApiPropertyOptional({ description: 'Page number to retrieve', default: 1, example: 1 })
   page: number = 1;
 
   @IsOptional()
   @IsPositive()
   @Type(() => Number)
+  @ApiPropertyOptional({ description: 'Number of items per page', default: 10, example: 10 })
   limit: number = 10;
 
   @IsOptional()
   @IsString()
-  search: string;
+  @ApiPropertyOptional({ description: 'Search query string', example: 'keyword' })
+  search?: string;
 }
 
 export class ReturnQueryDto {

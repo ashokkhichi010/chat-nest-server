@@ -30,6 +30,7 @@
     "@nestjs/platform-express": "^10.1.2",
     "@nestjs/platform-socket.io": "^10.2.6",
     "@nestjs/platform-ws": "^10.2.7",
+    "@nestjs/swagger": "^7.4.0",
     "@nestjs/websockets": "^10.2.6",
     "bcrypt": "^5.1.0",
     "class-transformer": "^0.5.1",

@@ -4,12 +4,12 @@ import { TokenService } from './services/token.service';
 import { DeviceService } from './services/device.service';
 import { UsersService } from '../users/users.service';
 import * as moment from 'moment';
-import { ForgotPasswordBodyDto, LogoutBodyDto, ResetPasswordBodyDto, refreshTokensBodyDto } from './dto/create-auth.dto';
+import { ForgotPasswordBodyDto, LogoutBodyDto, RegisterBodyDto, ResetPasswordBodyDto, LoginBodyDto, RefreshTokensBodyDto, CheckEmailContactNumberDto } from './dto/create-auth.dto';
 import { Device } from './entities/device.entity';
 import { ClientSession, Connection } from 'mongoose';
 import { InjectConnection } from '@nestjs/mongoose';
 import { customConfig } from '../config/config';
-import { ContactNumberDto } from 'src/users/users.dto';
+import { DeviceHeadersDto } from './dto/device.dto';
 
 const config = customConfig()
 
@@ -26,7 +26,7 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(201)
-  async register(@Headers() header: any, @Body() body: any) {
+  async register(@Headers() header: any, @Body() body: RegisterBodyDto) {
     const session: ClientSession = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -62,7 +62,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
-  async login(@Headers() header: any, @Body() body: any) {
+  async login(@Headers() header: DeviceHeadersDto, @Body() body: LoginBodyDto) {
     const session: ClientSession = await this.connection.startSession();
     try {
       session.startTransaction();
@@ -121,7 +121,7 @@ export class AuthController {
 
   @Post('refresh-tokens')
   @HttpCode(200)
-  async refreshTokens(@Body() { refreshToken }: refreshTokensBodyDto) {
+  async refreshTokens(@Body() { refreshToken }: RefreshTokensBodyDto) {
     const { user, device, expires } = await this.tokenService.verifyToken(refreshToken, config.TOKEN_TYPES.REFRESH);
 
     const tokens = {
@@ -188,10 +188,11 @@ export class AuthController {
 
   @Post('is-credentials-already-used')
   @HttpCode(200)
-  async check(@Body() body: { type: string, value: any }) {
+  async check(@Body() body: CheckEmailContactNumberDto) {
     try {
       const type = body.type;
-      const value = body.value;
+      const email = body.email;
+      const contactNumber = body.contactNumber;
 
       if (!["email", "contactNumber"].includes(type)) {
         throw new NotAcceptableException(`messages.auth.invaliedInputOfCheckEmailAndPhone`);
@@ -199,8 +200,8 @@ export class AuthController {
 
       const user =
         type === 'email'
-          ? await this.userService.getUserByEmail(value)
-          : await this.userService.getUserByContactNumber(value);
+          ? await this.userService.getUserByEmail(email)
+          : await this.userService.getUserByContactNumber(contactNumber);
 
       if (user) {
         throw new NotAcceptableException(`messages.auth.${type}AlreadyRegistered`);

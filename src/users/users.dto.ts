@@ -1,9 +1,13 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { Types } from 'mongoose';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class ContactNumberDto {
+  @ApiProperty()
   countryCode: string;
+
+  @ApiProperty()
   phoneNumber: string;
 }
 

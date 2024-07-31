@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { userCollection } from "../../users/users.entity";
-import { LudoPlayer, PieceInfoDto } from "../dto/piece-info.dto";
+import { LudoPlayer, PlayerPieceDto } from "../dto/piece-info.dto";
 
 @Schema({ timestamps: true })
 export class LudoConnection extends Document {
@@ -16,7 +16,7 @@ export class LudoConnection extends Document {
     status: String | string;
 
     @Prop({ type: Array, required: false, default: null })
-    piecesInfo: PieceInfoDto[];
+    piecesInfo: PlayerPieceDto[];
 
     @Prop({ type: Boolean, default: false })
     isStarted: boolean;

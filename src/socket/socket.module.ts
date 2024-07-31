@@ -18,6 +18,9 @@ import { ChessConnection, chessConnectionCollection, chessConnectionSchema } fro
 import { ChessMove, chessMoveCollection, chessMoveSchema } from 'src/chess/entities/movePiece.entity';
 import { DeviceService } from 'src/auth/services/device.service';
 import { Device, deviceCollection, deviceSchema } from 'src/auth/entities/device.entity';
+import { LudoService } from 'src/ludo/ludo.service';
+import { ludoCollection, LudoConnection, ludoSchema } from 'src/ludo/entities/ludo.entity';
+import { LudoMove, ludoMoveCollection, ludoMoveSchema } from 'src/ludo/entities/movePiece.entity';
 
 @Module({
     imports: [
@@ -31,11 +34,14 @@ import { Device, deviceCollection, deviceSchema } from 'src/auth/entities/device
             { name: ChessConnection.name, schema: chessConnectionSchema, collection: chessConnectionCollection },
             { name: ChessMove.name, schema: chessMoveSchema, collection: chessMoveCollection },
             { name: Device.name, schema: deviceSchema, collection: deviceCollection },
-        ])
+            { name: LudoConnection.name, schema: ludoSchema, collection: ludoCollection },
+            { name: LudoMove.name, schema: ludoMoveSchema, collection: ludoMoveCollection },
+        ]),
         // AuthModule, UsersModule, MessageModule,
+
     ],
     controllers: [],
-    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService, ChessService, DeviceService],
+    providers: [SocketGateway, SocketService, TokenService, UsersService, ContactService, MessageService, NotificationsService, ChessService, DeviceService, LudoService],
     exports: [SocketGateway, SocketService]
 })
 export class SocketModule { }

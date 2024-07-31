@@ -11,6 +11,7 @@ import { MoveChessPieceDto } from './dto/create-socket.dto';
 import { ChessService } from 'src/chess/chess.service';
 import { DeviceService } from 'src/auth/services/device.service';
 import { DeviceHeadersDto } from 'src/auth/dto/device.dto';
+import { LudoService } from 'src/ludo/ludo.service';
 
 @WebSocketGateway({ cors: { origin: process.env.APP_URL, credentials: false }, transports: ['websocket'] })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -21,6 +22,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly userService: UsersService,
     private readonly notificationService: NotificationsService,
     private readonly chessService: ChessService,
+    private readonly ludoService: LudoService,
     private readonly deviceService: DeviceService,
   ) { }
 
@@ -121,6 +123,16 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // callback('your data has been received');
   }
 
+  @SubscribeMessage('ludo-roll-dice')
+  async handleLudoRollDice(@MessageBody() { ludoConnectionId, playerId }: { ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId }) {
+    await this.ludoService.rollDice(ludoConnectionId, playerId, this.emitEvents);
+  }
+
+  @SubscribeMessage('ludo-move-piece')
+  async handleLudoMovePiece(@MessageBody() { from, to, user, chessConnectionId }: MoveChessPieceDto) {
+    await this.chessService.handleMoveChessPiece(from, to, user, chessConnectionId, this.emitEvents);
+  }
+
   @SubscribeMessage('web-rtc')
   async handleWebRTC(@MessageBody() { offer, answer, userId }: { offer: any, answer: any, userId: Types.ObjectId }) {
     console.log("🚀 ~ file: socket.gateway.ts:115 ~ SocketGateway ~ handleWebRTC ~ userId:", userId)
@@ -179,7 +191,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     deviceId: Types.ObjectId = null,
     timeout: number = 2000
   ) => {
-    const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds([userId]);
+    const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds(userId);
     console.log({ userId, deviceId, event, clientIds })
 
     const customCallback = (err: Error, res: any) => {

@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Types } from "mongoose";
 import { userCollection } from "../../users/users.entity";
 import { ludoCollection } from "./ludo.entity";
+import { PieceInfoDto } from "../dto/piece-info.dto";
 
 @Schema({ timestamps: true })
 export class LudoMove extends Document {
@@ -15,10 +16,10 @@ export class LudoMove extends Document {
   pieceIndex: string;
 
   @Prop({ type: String, required: true })
-  from: string;
+  from: PieceInfoDto;
 
   @Prop({ type: String, required: true })
-  to: string;
+  to: PieceInfoDto;
 
   @Prop({ type: Number, required: true })
   duration: number;

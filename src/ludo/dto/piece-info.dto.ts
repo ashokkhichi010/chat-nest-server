@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export class PieceInfoDto {
+export class PlayerPieceDto {
     playerType: string;
     userId: Types.ObjectId;
     pieceValue: {
@@ -9,6 +9,11 @@ export class PieceInfoDto {
         3: number;
         4: number;
     }
+}
+
+export class PieceInfoDto {
+    position: string;
+    value: number;
 }
 
 export class LudoPlayer {

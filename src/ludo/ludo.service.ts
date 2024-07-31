@@ -1,6 +1,4 @@
 import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
-import { CreateLudoDto } from './dto/create-ludo.dto';
-import { UpdateLudoDto } from './dto/update-ludo.dto';
 import { Model, Types } from 'mongoose';
 import { LudoConnection } from './entities/ludo.entity';
 import { LudoMove } from './entities/movePiece.entity';
@@ -14,7 +12,7 @@ import { User } from 'src/users/users.entity';
 export class LudoService {
   constructor(
     @InjectModel(LudoConnection.name) private readonly ludoConnection: Model<LudoConnection>,
-    // @InjectModel(LudoMove.name) private readonly ludoMoveModel: Model<LudoMove>,
+    @InjectModel(LudoMove.name) private readonly ludoMoveModel: Model<LudoMove>,
   ) { }
 
   getLudoConnectionById = async (ludoConnectionId: Types.ObjectId) => {
@@ -121,5 +119,34 @@ export class LudoService {
     const actioFunction = isGameStarted ? this.replacePlayerByComputer : this.removePlayer;
 
     return await actioFunction(ludoConnection, playerId);
+  }
+
+  rollDice = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, emitEvents: Function) => {
+    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
+    const connectedPlayers = ludoConnection.toJSON().players;
+
+    const diceValue = 4;
+
+    const diceRoller = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
+
+    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { dice_roller: diceRoller, dice_value: diceValue }, null, friend.deviceId));
+  }
+
+  movePiece = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {
+    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
+    const connectedPlayers = ludoConnection.toJSON().players;
+
+    const pieceMover = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
+
+    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
+  }
+
+  updatePieceValue = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {
+    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
+    const connectedPlayers = ludoConnection.toJSON().players;
+
+    const pieceMover = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
+
+    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
   }
 }

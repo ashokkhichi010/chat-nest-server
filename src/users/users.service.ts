@@ -7,6 +7,7 @@ import { ContactNumberDto, CreateUserDto, UpdateUserDto, UserListDto } from './u
 import { customConfig } from '../config/config';
 import { contactCollection } from '../contact/entities/contact.entity';
 import { ReturnQueryDto } from '../common/dto/pagination-query.dto';
+import { RegisterBodyDto } from 'src/auth/dto/create-auth.dto';
 
 const config = customConfig()
 
@@ -41,7 +42,7 @@ export class UsersService {
     return users[0];
   }
 
-  create = async (newUserObj: CreateUserDto, session: mongoose.ClientSession = null): Promise<User> => {
+  create = async (newUserObj: RegisterBodyDto, session: mongoose.ClientSession = null): Promise<User> => {
     const isEmailExist = await this.getUserByEmail(newUserObj.email);
 
     if (isEmailExist) {

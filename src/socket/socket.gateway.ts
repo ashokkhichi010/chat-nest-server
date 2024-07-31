@@ -179,7 +179,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     deviceId: Types.ObjectId = null,
     timeout: number = 2000
   ) => {
-    const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds(userId);
+    const clientIds = deviceId ? [await this.socketService.getClientId({ userId, deviceId })] : await this.socketService.getConnectedClientIds([userId]);
     console.log({ userId, deviceId, event, clientIds })
 
     const customCallback = (err: Error, res: any) => {

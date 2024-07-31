@@ -21,6 +21,7 @@ import { SocketModule } from './socket/socket.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { GroupsModule } from './groups/groups.module';
 import { CallModule } from './call/call.module';
+import { LudoModule } from './ludo/ludo.module';
 
 const config = customConfig()
 
@@ -53,6 +54,7 @@ const config = customConfig()
         NotificationsModule,
         GroupsModule,
         CallModule,
+        LudoModule,
     ],
     controllers: [],
     providers: [

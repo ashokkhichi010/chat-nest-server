@@ -74,6 +74,16 @@
     "request_rejected": "Chess request rejected",
     "connection_not_found": "Chess connection not found"
   },
+  "ludo": {
+    "connected": "Ludo connection established successfully.",
+    "request_sent": "Ludo request sent successfully.",
+    "connection_not_found": "Ludo connection not found",
+    "unauthorized_to_send_invitation": "Sorry, you don't have any required permission to send invitation.",
+    "room_is_full": "Sorry, you cannot join this Ludo game because it has already started or completed.",
+    "joined": "Ludo room joined successfully.",
+    "leaved": "Ludo room leaved successfully.",
+    "session_expired": "Ludo game session expired."
+  },
   "LOGIN_SUCCESSFULLY": "Signed in successfully.",
   "LOGIN_UNSUCCESSFULLY": "Email or password is incorrect.",
   "LOGOUT_SUCCESSFULLY": "Sign out successfully.",

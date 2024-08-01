@@ -9,8 +9,10 @@ const compairMongoId = (id_1: Types.ObjectId | string, id_2: Types.ObjectId | st
     return id_1.toString() === id_2.toString();
 }
 
+const getRandomValue = ({ maxValue }) => Math.floor(Math.random() * maxValue) + 1;
 
 export {
     generateRandomNumber,
     compairMongoId,
+    getRandomValue,
 }

@@ -15,7 +15,7 @@ export class LudoConnection extends Document {
     @Prop({ type: String, enum: ['PENDING', 'STARTED', 'CANCELED', 'COMPLETED'], default: 'PENDING' })
     status: String | string;
 
-    @Prop({ type: Array, required: false, default: null })
+    @Prop({ type: Array, required: false })
     piecesInfo: PlayerPieceDto[];
 
     @Prop({ type: Boolean, default: false })

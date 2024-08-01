@@ -62,9 +62,9 @@ export class LudoController {
 
     const connectedPlayers = ludoConnection.players;
 
-    connectedPlayers.forEach(friend => this.socketGateway.emitEvents(friend.userId, 'ludo-game-request', { ...ludoConnection.toJSON() }, null, friend.deviceId));
-
     const isAllPlayersConnected = connectedPlayers.length === 4;
+
+    connectedPlayers.forEach(friend => this.socketGateway.emitEvents(friend.userId, 'ludo-game-request', { ...ludoConnection.toJSON(), is_starting: isAllPlayersConnected }, null, friend.deviceId));
 
     if (isAllPlayersConnected) {
       setTimeout(() => {

@@ -2,8 +2,11 @@ import { Types } from "mongoose";
 
 export class PlayerPieceDto {
     playerType: string;
-    userId: Types.ObjectId;
-    pieceValue: {
+    action: string;
+    is_my_turn: boolean;
+    is_dice_used: boolean;
+    dice_value: number;
+    pieces: {
         1: number;
         2: number;
         3: number;

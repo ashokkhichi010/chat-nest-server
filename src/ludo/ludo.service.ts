@@ -3,8 +3,8 @@ import { Model, Types } from 'mongoose';
 import { LudoConnection } from './entities/ludo.entity';
 import { LudoMove } from './entities/movePiece.entity';
 import { InjectModel } from '@nestjs/mongoose';
-import { LudoPlayer } from './dto/piece-info.dto';
-import { compairMongoId, generateRandomNumber } from 'src/utils/helper';
+import { LudoPlayer, PlayerPieceDto } from './dto/piece-info.dto';
+import { compairMongoId, generateRandomNumber, getRandomValue } from 'src/utils/helper';
 import * as moment from 'moment';
 import { User } from 'src/users/users.entity';
 
@@ -54,6 +54,26 @@ export class LudoService {
     return nextPlayerInfo;
   }
 
+  getPieceInfo = (playerType: string): PlayerPieceDto => {
+    const isFirstPlayer = playerType === "player_a";
+
+    const pieceInfo = {
+      playerType,
+      action: isFirstPlayer ? "dice_roll" : "",
+      is_my_turn: isFirstPlayer,
+      is_dice_used: isFirstPlayer,
+      dice_value: 0,
+      pieces: {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0
+      }
+    };
+
+    return pieceInfo;
+  };
+
   async createLudoConnection(ludoPlayerInfo: LudoPlayer) {
     const roomNumberLength = 8;
 
@@ -85,8 +105,10 @@ export class LudoService {
     }
 
     const playerInfo = this.getNextPlayerInfo(totalConnectedPlayers, user.name, user.image, user._id, deviceId);
+    const piecesInfo = this.getPieceInfo(playerInfo.type);
 
     ludoConnection.players = [...ludoConnection.players, playerInfo];
+    ludoConnection.piecesInfo = [...ludoConnection.piecesInfo, piecesInfo];
 
     return await ludoConnection.save();
   }
@@ -129,7 +151,7 @@ export class LudoService {
     const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
     const connectedPlayers = ludoConnection.toJSON().players;
 
-    const diceValue = 4;
+    const diceValue = getRandomValue({ maxValue: 6 });
 
     const diceRoller = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
 

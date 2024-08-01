@@ -63,7 +63,7 @@ export class LudoService {
       roomNumber = generateRandomNumber(roomNumberLength);
     }
 
-    const sessionTimeOut = moment().add(5, 'minutes').toISOString();
+    const sessionTimeOut = moment().add(50, 'minutes').toISOString();
 
     const connectBody = {
       players: [ludoPlayerInfo],
@@ -94,9 +94,11 @@ export class LudoService {
   async removePlayer(ludoConnection: LudoConnection, playerId: Types.ObjectId) {
     const remainingPlayers = ludoConnection.players.filter((player: LudoPlayer) => !compairMongoId(player.userId, playerId));
 
-    ludoConnection.players = remainingPlayers.map((player, index) => {
+    const playersWithNewPosition = remainingPlayers.map((player, index) => {
       return this.getNextPlayerInfo(index, player.name, player.image, player.userId, player.deviceId);
     });
+
+    ludoConnection.players = playersWithNewPosition;
 
     return await ludoConnection.save();
   }
@@ -116,9 +118,11 @@ export class LudoService {
 
     const isGameStarted = ludoConnection.isCanceled;
 
-    const actioFunction = isGameStarted ? this.replacePlayerByComputer : this.removePlayer;
+    const result = isGameStarted
+      ? await this.replacePlayerByComputer(ludoConnection, playerId)
+      : await this.removePlayer(ludoConnection, playerId);
 
-    return await actioFunction(ludoConnection, playerId);
+    return result
   }
 
   rollDice = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, emitEvents: Function) => {

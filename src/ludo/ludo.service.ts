@@ -85,8 +85,11 @@ export class LudoService {
 
     const sessionTimeOut = moment().add(50, 'minutes').toISOString();
 
+    const piecesInfo = this.getPieceInfo(ludoPlayerInfo.type);
+
     const connectBody = {
       players: [ludoPlayerInfo],
+      piecesInfo: [piecesInfo],
       roomNumber,
       sessionTimeOut,
     };
@@ -106,6 +109,12 @@ export class LudoService {
 
     const playerInfo = this.getNextPlayerInfo(totalConnectedPlayers, user.name, user.image, user._id, deviceId);
     const piecesInfo = this.getPieceInfo(playerInfo.type);
+
+    if (totalConnectedPlayers === 3) {
+      ludoConnection.status = "STARTED";
+      ludoConnection.isStarted = true;
+      ludoConnection.startedAt = new Date();
+    }
 
     ludoConnection.players = [...ludoConnection.players, playerInfo];
     ludoConnection.piecesInfo = [...ludoConnection.piecesInfo, piecesInfo];
@@ -147,15 +156,94 @@ export class LudoService {
     return result
   }
 
-  rollDice = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, emitEvents: Function) => {
+  getLudoInitializationData = (ludoConnectionId: Types.ObjectId, players: LudoPlayer[], pieces: PlayerPieceDto[], friend: LudoPlayer) => {
+    const previousPlayers = [];
+    const nextPlayers = [];
+    let selfInfo: LudoPlayer | any = {}
+
+    let is_i_am_already_joined = false;
+
+    const playersInfo = {};
+    const playerPiecesInfo = {};
+
+    players.forEach((player) => {
+      const isMe = compairMongoId(player.userId, friend.userId);
+      const playerPiece = pieces.find(piece => piece.playerType === player.type);
+
+      playerPiecesInfo[player.type] = {
+        action: playerPiece.action,
+        is_my_turn: playerPiece.is_my_turn,
+        is_dice_used: playerPiece.is_dice_used,
+        dice_value: playerPiece.dice_value,
+        pieces: playerPiece.pieces,
+      }
+
+      playersInfo[player.type] = {
+        name: player.name,
+        is_computer: player.is_computer,
+        is_online: true,
+        ludoConnectionId: ludoConnectionId,
+        color: player.color,
+        path_color: player.path_color,
+        image: player.image,
+      }
+
+      if (isMe) {
+        is_i_am_already_joined = true;
+        selfInfo = player;
+      } else if (!is_i_am_already_joined) {
+        previousPlayers.push(player);
+      } else {
+        nextPlayers.push(player);
+      }
+    });
+
+    const getPlayerKeyName = (player: LudoPlayer) => player.type;
+
+    const playersPositions = [selfInfo.type, ...nextPlayers.map(getPlayerKeyName), ...previousPlayers.map(getPlayerKeyName)];
+
+    return {
+      playersPositions,
+      playersInfo,
+      piecesInfo: playerPiecesInfo,
+    };
+  }
+
+  rollDice = async (ludoConnectionId: Types.ObjectId, player_type: string, emitEvents: Function) => {
     const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
-    const connectedPlayers = ludoConnection.toJSON().players;
+    const connectedPlayers = ludoConnection.players;
+    const connectedPlayerPieces = ludoConnection.piecesInfo;
+
+    const playerPiece = connectedPlayerPieces.find(piece => piece.playerType === player_type);
+    const otherPlayerPiece = connectedPlayerPieces.filter(piece => piece.playerType !== player_type);
 
     const diceValue = getRandomValue({ maxValue: 6 });
 
-    const diceRoller = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
+    const playerPiecesInfo = {};
 
-    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { dice_roller: diceRoller, dice_value: diceValue }, null, friend.deviceId));
+    playerPiece.action = "dice_rolling";
+    playerPiece.dice_value = diceValue;
+    playerPiece.is_dice_used = false;
+
+    const updatedPiecesInfo = [...otherPlayerPiece, playerPiece];
+
+    connectedPlayers.forEach((player) => {
+      const currentPlayerPiece = updatedPiecesInfo.find(piece => piece.playerType === player.type);
+
+      playerPiecesInfo[player.type] = {
+        action: currentPlayerPiece.action,
+        is_my_turn: currentPlayerPiece.is_my_turn,
+        is_dice_used: currentPlayerPiece.is_dice_used,
+        dice_value: currentPlayerPiece.dice_value,
+        pieces: currentPlayerPiece.pieces,
+      }
+    });
+
+    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { playerPiecesInfo }, null, friend.deviceId));
+
+    ludoConnection.piecesInfo = updatedPiecesInfo;
+
+    await ludoConnection.save();
   }
 
   movePiece = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {
@@ -164,7 +252,7 @@ export class LudoService {
 
     const pieceMover = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
 
-    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
+    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-piece-moving', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
   }
 
   updatePieceValue = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {

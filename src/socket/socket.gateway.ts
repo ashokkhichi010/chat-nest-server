@@ -124,8 +124,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('ludo-roll-dice')
-  async handleLudoRollDice(@MessageBody() { ludoConnectionId, playerId }: { ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId }) {
-    await this.ludoService.rollDice(ludoConnectionId, playerId, this.emitEvents);
+  async handleLudoRollDice(@MessageBody() { ludoConnectionId, playerType }: { ludoConnectionId: Types.ObjectId, playerType: string }) {
+    await this.ludoService.rollDice(ludoConnectionId, playerType, this.emitEvents);
   }
 
   @SubscribeMessage('ludo-move-piece')

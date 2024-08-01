@@ -68,7 +68,11 @@ export class LudoController {
 
     if (isAllPlayersConnected) {
       setTimeout(() => {
-        connectedPlayers.forEach(friend => this.socketGateway.emitEvents(friend.userId, 'start-ludo-game', { ...ludoConnection.toJSON() }, null, friend.deviceId));
+        connectedPlayers.forEach(friend => {
+          const gameInitialObjects = this.ludoService.getLudoInitializationData(ludoConnectionId, connectedPlayers, ludoConnection.piecesInfo, friend)
+
+          this.socketGateway.emitEvents(friend.userId, 'start-ludo-game', gameInitialObjects, null, friend.deviceId);
+        });
       }, 3000);
     }
 

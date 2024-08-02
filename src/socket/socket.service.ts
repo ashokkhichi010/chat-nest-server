@@ -65,66 +65,23 @@ export class SocketService {
     return csc;
   }
 
-  // disconnectClient = async (userId, deviceId, emitEvent, session = null, lang = 'en') => {
-  //   const user = await userService.getUserById(userId);
-  //   if (!user) {
-  //     return new Error(getApiMessages('USER_NOT_FOUND', lang));
-  //   }
-
-  //   userId = Types.Types.ObjectId(userId);
-  //   deviceId = Types.Types.ObjectId(deviceId);
-
-  //   let clientServerConnection = await this.socketConnection.findOne({ userId, deviceId, status: "CONNECTED" }).sort({ createdAt: -1 });
-
-  //   if (!clientServerConnection) {
-  //     return new Error('clientDevice Not Found');
-  //   }
-
-  //   const clientServerObj = { clientId: '', status: 'DISCONNECTED' };
-  //   console.log('Old Client disconnected to server:', clientServerConnection.clientId);
-
-  //   Object.assign(clientServerConnection, clientServerObj);
-  //   const options = {};
-  //   session && (options.session = session);
-
-  //   await clientServerConnection.save(options);
-  //   await contactService.getOnlineContacts(userId, 'offline', emitEventToClient, emitEvent);
-
-  //   return;
-  // };
-
-  // emitEventToClient = async (userId, event, emitEvent, data, callback = null, timeout = 1000) => {
-  //   const csc = await this.socketConnection.find({ userId: Types.Types.ObjectId(userId), status: 'CONNECTED' });
-
-  //   const receiverClient = [];
-
-  //   csc.forEach((value) => {
-  //     receiverClient.push(value.clientId);
-  //   });
-
-  //   if (receiverClient.length) {
-  //     emitEvent(receiverClient, event, [data, callback], timeout);
-  //   }
-  // };
-
-  // disconnectClientByClientId = async (clientId, emitEvent) => {
-  //   const csc = await this.socketConnection.findOne({ clientId });
-
-  //   csc && await disconnectClient(csc.userId, csc.deviceId, emitEvent)
-  // };
-
   getClientId = async ({ userId, deviceId }) => {
     userId = new Types.ObjectId(userId);
     deviceId = new Types.ObjectId(deviceId);
-    const csc = await this.socketConnection.findOne({ userId, deviceId, status: "CONNECTED" });
+    const csc = await this.socketConnection.findOne({ userId, deviceId, status: "CONNECTED" }).select({ clientId: 1 });
 
     return csc ? csc.clientId : ''
   }
 
-  getConnectedClientIds = async (userId: Types.ObjectId): Promise<string[]> => {
-    const csc = await this.socketConnection.find({ userId: new mongoose.Types.ObjectId(userId), status: "CONNECTED" });
+  getConnectedClientIds = async (users: Types.ObjectId[]): Promise<string[]> => {
+    const csc = await this.socketConnection.find({ userId: { $in: users.map(id => new Types.ObjectId(id)) }, status: "CONNECTED" }).select({ clientId: 1 });
 
     return csc.map(device => device.clientId);
   }
-  // emitEvents = async ( to: Types.ObjectId, event: string, data: any, callback: Function) => { }
+
+  getClientIdsByDevices = async (devices: Types.ObjectId[]): Promise<string[]> => {
+    const csc = await this.socketConnection.find({ deviceId: { $in: devices }, status: "CONNECTED" }).select({ clientId: 1 });
+
+    return csc.map(device => device.clientId);
+  }
 }

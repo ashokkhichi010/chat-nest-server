@@ -6,6 +6,7 @@ import { CreateDeviceDto, DeviceHeadersDto, GetDeviceDto, UpdateDeviceDto } from
 import { TokenService } from './token.service';
 import { customConfig } from '../../config/config';
 import { UsersService } from 'src/users/users.service';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 const config = customConfig()
 @Injectable()
@@ -69,7 +70,7 @@ export class DeviceService {
     return await device.save(options);
   }
 
-  connectNewDevice = async (refreshToken: string, oldDeviceId: string, newClientId: string, newDeviceHeaders: DeviceHeadersDto, emitEvents: Function, saveClientData: Function) => {
+  connectNewDevice = async (refreshToken: string, oldDeviceId: Types.ObjectId, newClientId: string, newDeviceHeaders: DeviceHeadersDto, emitEvents: Function, saveClientData: Function) => {
     const token = await this.tokenService.verifyToken(refreshToken, config.TOKEN_TYPES.REFRESH);
     const userId = token.user;
 
@@ -87,7 +88,18 @@ export class DeviceService {
 
     [access, refresh] = await Promise.all([access, refresh]);
 
-    emitEvents(user._id, "qr-code-response-new-device", { tokens: { access, refresh }, user, device }, null, device.id, () => { });
-    emitEvents(user._id, "qr-code-response-old-device", { success: true }, null, oldDeviceId, () => { });
+    const emitEventToNewDevice = new EmitEventDto();
+    const emitEventToOldDevice = new EmitEventDto();
+
+    emitEventToNewDevice.devices = [device.id];
+    emitEventToNewDevice.event = "qr-code-response-new-device";
+    emitEventToNewDevice.data = { tokens: { access, refresh }, user, device };
+
+    emitEventToOldDevice.devices = [oldDeviceId];
+    emitEventToOldDevice.event = "qr-code-response-old-device";
+    emitEventToOldDevice.data = { success: true };
+
+    emitEvents(emitEventToNewDevice);
+    emitEvents(emitEventToOldDevice);      
   }
 }

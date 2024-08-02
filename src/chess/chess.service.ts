@@ -8,6 +8,7 @@ import { UsersService } from 'src/users/users.service';
 import * as moment from 'moment';
 import { ChessMove } from './entities/movePiece.entity';
 import { isNotEmpty } from 'class-validator';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Injectable()
 export class ChessService {
@@ -246,10 +247,25 @@ export class ChessService {
       isTurn: isCaller,
     };
 
-    emitEvents(caller.userId, 'chess-move-piece', { chessData: callerData }, null, caller.deviceId);
-    emitEvents(receiver.userId, 'chess-move-piece', { chessData: receiverData }, null, receiver.deviceId);
+
+    const emitEventToCaller = new EmitEventDto();
+
+    emitEventToCaller.devices = [caller.deviceId];
+    emitEventToCaller.event = 'chess-move-piece';
+    emitEventToCaller.data = { chessData: callerData };
+
+    emitEvents(emitEventToCaller);
+
+
+    const emitEventToReceiver = new EmitEventDto();
+
+    emitEventToReceiver.devices = [receiver.deviceId];
+    emitEventToReceiver.event = 'chess-move-piece';
+    emitEventToReceiver.data = { chessData: receiverData };
+
+    emitEvents(emitEventToReceiver);
+
     const responseTime = moment().unix() - moment(clickTime).unix();
-    console.log("🚀 ~ file: chess.service.ts:211 ~ ChessService ~ handleMoveChessPiece= ~ responseTime:", responseTime)
   }
 
   movePiece = async (previousData: ChessPieceDto, currentData: ChessPieceDto, chessBoard: ChessPieceDto[]) => {

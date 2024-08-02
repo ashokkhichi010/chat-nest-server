@@ -11,6 +11,7 @@ import { CustomObjectId } from 'src/pipes/customObjectId.pipe';
 import { UsersService } from 'src/users/users.service';
 import * as moment from 'moment';
 import { ChessConnection } from './entities/chess.entity';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Controller('chess')
 export class ChessController {
@@ -36,7 +37,13 @@ export class ChessController {
 
     const timeOut = moment().add(60, 'seconds').toISOString();
 
-    this.socketGateway.emitEvents(contactUser, 'chess-request', { chessData: { ...result.toObject(), caller, receiver, requestStatus: 'RECEIVED', timeOut } });
+    const emitChessRequestEvent = new EmitEventDto();
+
+    emitChessRequestEvent.users = [contactUser];
+    emitChessRequestEvent.event = 'chess-request';
+    emitChessRequestEvent.data = { chessData: { ...result.toObject(), caller, receiver, requestStatus: 'RECEIVED', timeOut } };
+
+    this.socketGateway.emitEvents(emitChessRequestEvent);
 
     return {
       message: "messages.chess.request_sent",
@@ -49,13 +56,16 @@ export class ChessController {
   async getDisConnect(@AuthUser() user: User, @Param("chessConnectionId", CustomObjectId) chessConnectionId: Types.ObjectId) {
     const caller = user;
     const userId = caller._id;
-    console.log("🚀 ~ file: chess.controller.ts:52 ~ ChessController ~ getDisConnect ~ userId:", userId)
 
     const result: ChessConnection = await this.chessService.disconnect(chessConnectionId, userId);
-    // console.log("🚀 ~ file: chess.controller.ts:54 ~ ChessController ~ getDisConnect ~ result:", result);
 
-    // this.socketGateway.emitEvents(result.winner, 'chess-completed', { ...result.toJSON() });
-    this.socketGateway.emitEvents(result.winner['userId'], 'chess-request', { chessData: { ...result } }, null, result.winner['deviceId']);
+    const emitChessRequestEvent = new EmitEventDto();
+
+    emitChessRequestEvent.devices = [result.winner['deviceId']];
+    emitChessRequestEvent.event = 'chess-request';
+    emitChessRequestEvent.data = { chessData: { ...result } };
+
+    this.socketGateway.emitEvents(emitChessRequestEvent);
 
     return {
       message: "messages.chess.request_sent",
@@ -92,7 +102,13 @@ export class ChessController {
       isTurn: true,
     };
 
-    this.socketGateway.emitEvents(caller.userId, 'chess-request', { chessData: callerData }, null, caller.deviceId);
+    const emitChessRequestEvent = new EmitEventDto();
+
+    emitChessRequestEvent.devices = [caller.deviceId];
+    emitChessRequestEvent.event = 'chess-request';
+    emitChessRequestEvent.data = { chessData: callerData };
+
+    this.socketGateway.emitEvents(emitChessRequestEvent);
 
     return {
       message: "messages.chess.request_accepted",
@@ -118,7 +134,13 @@ export class ChessController {
     const tempCaller = await this.userService.getUserById(caller.userId);
     const tempReceiver = await this.userService.getUserById(receiver.userId);
 
-    this.socketGateway.emitEvents(receiver.userId, 'chess-request', { chessData: { ...result.toObject(), caller: tempCaller, receiver: tempReceiver, requestStatus: 'RECEIVED' } }, null, receiver.deviceId);
+    const emitChessRequestEvent = new EmitEventDto();
+
+    emitChessRequestEvent.devices = [receiver.deviceId];
+    emitChessRequestEvent.event = 'chess-request';
+    emitChessRequestEvent.data = { chessData: { ...result.toObject(), caller: tempCaller, receiver: tempReceiver, requestStatus: 'RECEIVED' } };
+
+    this.socketGateway.emitEvents(emitChessRequestEvent);
 
     return {
       message: "messages.chess.request_canceled",
@@ -135,7 +157,13 @@ export class ChessController {
     const tempCaller = await this.userService.getUserById(caller.userId);
     const tempReceiver = await this.userService.getUserById(receiver.userId);
 
-    this.socketGateway.emitEvents(caller.userId, 'chess-request', { chessData: { ...result.toObject(), caller: tempCaller, receiver: tempReceiver, requestStatus: 'SENT' } }, null, caller.deviceId);
+    const emitChessRequestEvent = new EmitEventDto();
+
+    emitChessRequestEvent.devices = [caller.deviceId];
+    emitChessRequestEvent.event = 'chess-request';
+    emitChessRequestEvent.data = { chessData: { ...result.toObject(), caller: tempCaller, receiver: tempReceiver, requestStatus: 'SENT' } };
+
+    this.socketGateway.emitEvents(emitChessRequestEvent);
 
     return {
       message: "messages.chess.request_rejected",

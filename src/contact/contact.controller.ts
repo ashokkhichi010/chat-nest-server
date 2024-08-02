@@ -8,6 +8,7 @@ import { User } from '../users/users.entity';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { friendRequestAccepted, friendRequestReceived, friendRequestRejected, friendRequestSent } from '../utils/notification';
 import { SocketGateway } from '../socket/socket.gateway';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Controller('contacts')
 export class ContactController {
@@ -49,8 +50,14 @@ export class ContactController {
     [users1, users2] = await Promise.all([users1, users2]);
 
     const notification = friendRequestReceived(name);
-    // await pushNotification(contactUser, title, body);
-    await this.socketGateway.emitEvents(contactUser, 'notification', { notification, users: users2 }, null)
+
+    const emitNotificationEvent = new EmitEventDto();
+
+    emitNotificationEvent.users = [contactUser];
+    emitNotificationEvent.event = 'notification';
+    emitNotificationEvent.data = { notification, users: users2 };
+
+    this.socketGateway.emitEvents(emitNotificationEvent);
 
     return {
       message: friendRequestSent(contactUserInfo.name),
@@ -77,22 +84,14 @@ export class ContactController {
     [users1, users2, contacts1, contacts2] = await Promise.all([users1, users2, contacts1, contacts2]);
 
     const notification = friendRequestAccepted(name);
-    this.socketGateway.emitEvents(contactUser, 'notification', { notification, users: users2, contacts: contacts2 }, null)
 
-    // await clientServerConnectionService.emitEventToClient(
-    //   contactUser,
-    //   'request accepted',
-    //   emitEvent,
-    //   { message: body, contactUser: userId },
-    //   async (error, res) => {
-    //     if (error) {
-    //       await pushNotification(contactUser, title, body);
-    //       console.log('🚀 ~ file: contact.controller.js:65 ~ error:', error);
-    //     } else if (res[0] && res[0].success) {
-    //       console.log('🚀 ~ file: contact.controller.js:67 ~ res:', res);
-    //     }
-    //   }
-    // );
+    const emitNotificationEvent = new EmitEventDto();
+
+    emitNotificationEvent.users = [contactUser];
+    emitNotificationEvent.event = 'notification';
+    emitNotificationEvent.data = { notification, users: users2, contacts: contacts2 };
+
+    this.socketGateway.emitEvents(emitNotificationEvent);
 
     return {
       message: "messages.REQUEST_ACCEPTED",
@@ -117,8 +116,13 @@ export class ContactController {
 
     [users1, users2] = await Promise.all([users1, users2])
 
-    // const notification = friendRequestAccepted(name);
-    this.socketGateway.emitEvents(contactUser, 'notification', { users: users2 }, null)
+    const emitNotificationEvent = new EmitEventDto();
+
+    emitNotificationEvent.users = [contactUser];
+    emitNotificationEvent.event = 'notification';
+    emitNotificationEvent.data = { users: users2 };
+
+    this.socketGateway.emitEvents(emitNotificationEvent);
 
     return {
       message: "messages.REQUEST_CANCELED",
@@ -141,8 +145,14 @@ export class ContactController {
     [users1, users2] = await Promise.all([users1, users2])
 
     const notification = friendRequestRejected(name);
-    // await pushNotification(contactUser, title, body);
-    this.socketGateway.emitEvents(contactUser, 'notification', { notification, users: users2 }, null)
+
+    const emitNotificationEvent = new EmitEventDto();
+
+    emitNotificationEvent.users = [contactUser];
+    emitNotificationEvent.event = 'notification';
+    emitNotificationEvent.data = { notification, users: users2 };
+
+    this.socketGateway.emitEvents(emitNotificationEvent);
 
     return {
       message: "messages.REQUEST_REJECTED",

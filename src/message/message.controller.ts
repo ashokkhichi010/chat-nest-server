@@ -9,6 +9,7 @@ import { User } from '../users/users.entity';
 import { ContactService } from '../contact/contact.service';
 import { SocketGateway } from '../socket/socket.gateway';
 import { getConnectionId } from '../utils/getConnectionId';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Controller('chats')
 export class MessageController {
@@ -61,13 +62,13 @@ export class MessageController {
     const messageResult = await this.messageService.createMessage({ sender: userId, receiver: contactUser, message, connectionId });
     // await this.contactService.updateLastMessage(userId, contactUser, messageResult);
 
-    let contacts1: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
-    let messages1: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser, userId });
+    let myContacts: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
+    let myMessages: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser, userId });
 
-    let contacts2: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
-    let messages2: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser: userId, userId: contactUser });
+    let friendsContacts: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
+    let friendsMessages: any = this.messageService.getMessages({ limit: 100, page: 1, search: "", connectionId, contactUser: userId, userId: contactUser });
 
-    [contacts1, messages1, contacts2, messages2] = await Promise.all([contacts1, messages1, contacts2, messages2])
+    [myContacts, myMessages, friendsContacts, friendsMessages] = await Promise.all([myContacts, myMessages, friendsContacts, friendsMessages])
 
     const callback = async (err: Error, res: any) => {
       if (res[0]?.success) {
@@ -78,27 +79,43 @@ export class MessageController {
 
         Object.assign(messageResult, updateMessage);
         let tempMsg: any = await messageResult.save();
-        // let tempCon: any = this.contactService.updateLastMessage(userId, contactUser, messageResult);
-        // [tempMsg, tempCon] = await Promise.all([tempMsg, tempCon]);
 
-        let contacts1: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
-        let contacts2: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
+        let myContacts: any = this.contactService.getContacts({ userId, limit: 100, page: 1, search: "" });
+        let friendsContacts: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
 
-        [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
+        [myContacts, friendsContacts] = await Promise.all([myContacts, friendsContacts]);
 
-        this.socketGateway.emitEvents(userId, 'message-received', { message: messageResult.toObject(), contacts: contacts1 }, null);
-        this.socketGateway.emitEvents(contactUser, 'message-received', { message: messageResult.toObject(), contacts: contacts2 }, null);
+        const emitEventToSelf = new EmitEventDto();
+        const emitEventToFriend = new EmitEventDto();
+
+        emitEventToSelf.users = [userId]
+        emitEventToSelf.event = 'message-received';
+        emitEventToSelf.data = { message: messageResult.toObject(), contacts: myContacts };
+
+        emitEventToFriend.users = [contactUser]
+        emitEventToFriend.event = 'message-received';
+        emitEventToFriend.data = { message: messageResult.toObject(), contacts: friendsContacts };
+
+        this.socketGateway.emitEvents(emitEventToSelf);
+        this.socketGateway.emitEvents(emitEventToFriend);
       }
     }
 
     const notification = textMessageReceived(name);
-    this.socketGateway.emitEvents(contactUser, 'notification', { messages: messages2, contacts: contacts2, contactUser: userId, notification }, callback);
+
+    const emitEventToFriend = new EmitEventDto();
+
+    emitEventToFriend.users = [contactUser]
+    emitEventToFriend.event = 'notification';
+    emitEventToFriend.data = { messages: friendsMessages, contacts: friendsContacts, contactUser: userId, notification };
+
+    this.socketGateway.emitEvents(emitEventToFriend, callback);
 
     return {
       message: "",
       data: {
-        contacts: contacts1,
-        messages: messages1
+        contacts: myContacts,
+        messages: myMessages
       }
     }
   }
@@ -120,7 +137,13 @@ export class MessageController {
     let contacts2: any = this.contactService.getContacts({ userId: contactUser, limit: 100, page: 1, search: "" });
     [contacts1, contacts2] = await Promise.all([contacts1, contacts2]);
 
-    this.socketGateway.emitEvents(contactUser, 'message-deleted', { messageId, contacts: contacts2 }, null);
+    const emitEventToFriend = new EmitEventDto();
+
+    emitEventToFriend.users = [contactUser]
+    emitEventToFriend.event = 'message-deleted';
+    emitEventToFriend.data = { messageId, contacts: contacts2 };
+
+    this.socketGateway.emitEvents(emitEventToFriend);
 
     return {
       message: "messages.message.deleted",

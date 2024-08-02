@@ -11,6 +11,7 @@ import { UsersService } from 'src/users/users.service';
 import * as moment from 'moment';
 import { CallService } from './call.service';
 import { CallS } from './entities/call.entity';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Controller('call')
 export class CallController {
@@ -39,8 +40,19 @@ export class CallController {
 
     const timeOut = moment().add(60, 'seconds').toISOString();
 
-    this.socketGateway.emitEvents(contactUser, 'call-request', { callData: { ...result.toObject(), caller, receiver, requestStatus: 'RECEIVED', timeOut } });
-    this.socketGateway.emitEvents(contactUser, 'web-rtc', { offer: body.offer, type: body.type });
+    const emitCallRequestEvent = new EmitEventDto();
+    const emitWebRtcEvent = new EmitEventDto();
+
+    emitCallRequestEvent.users = [contactUser];
+    emitCallRequestEvent.event = 'call-request';
+    emitCallRequestEvent.data = { callData: { ...result.toObject(), caller, receiver, requestStatus: 'RECEIVED', timeOut } };
+
+    emitWebRtcEvent.users = [contactUser];
+    emitWebRtcEvent.event = 'web-rtc';
+    emitWebRtcEvent.data = { offer: body.offer, type: body.type };
+
+    this.socketGateway.emitEvents(emitCallRequestEvent);
+    this.socketGateway.emitEvents(emitWebRtcEvent);
 
     return {
       message: "messages.call.request_sent",
@@ -58,7 +70,13 @@ export class CallController {
 
     const secondPerson = disconnectedBy.toString() === caller.userId.toString() ? receiver : caller;
 
-    this.socketGateway.emitEvents(secondPerson.userId, 'call-request', { callData: result.toObject() }, null);
+    const emitCallRequestEvent = new EmitEventDto();
+
+    emitCallRequestEvent.users = [secondPerson.userId];
+    emitCallRequestEvent.event = 'call-request';
+    emitCallRequestEvent.data = { callData: result.toObject() };
+
+    this.socketGateway.emitEvents(emitCallRequestEvent);
 
     return {
       message: "messages.call.request_sent",
@@ -84,8 +102,19 @@ export class CallController {
       requestStatus: 'SENT',
     };
 
-    this.socketGateway.emitEvents(caller.userId, 'call-request', { callData: callerData }, null, caller.deviceId);
-    this.socketGateway.emitEvents(caller.userId, 'web-rtc', { answer: body.answer }, null, caller.deviceId);
+    const emitCallRequestEvent = new EmitEventDto();
+    const emitWebRtcEvent = new EmitEventDto();
+
+    emitCallRequestEvent.users = [caller.userId];
+    emitCallRequestEvent.event = 'call-request';
+    emitCallRequestEvent.data = { callData: callerData };
+
+    emitWebRtcEvent.users = [caller.userId];
+    emitWebRtcEvent.event = 'web-rtc';
+    emitWebRtcEvent.data = { answer: body.answer };
+
+    this.socketGateway.emitEvents(emitCallRequestEvent);
+    this.socketGateway.emitEvents(emitWebRtcEvent);
 
     return {
       message: "messages.call.request_accepted",
@@ -114,7 +143,14 @@ export class CallController {
       requestStatus: 'RECEIVED',
     };
 
-    this.socketGateway.emitEvents(receiver.userId, 'call-request', { callData: callerData }, null, receiver.deviceId);
+
+    const emitCallRequestEvent = new EmitEventDto();
+
+    emitCallRequestEvent.users = [receiver.userId];
+    emitCallRequestEvent.event = 'call-request';
+    emitCallRequestEvent.data = { callData: callerData };
+
+    this.socketGateway.emitEvents(emitCallRequestEvent);
 
     return {
       message: "messages.call.request_canceled",
@@ -143,7 +179,13 @@ export class CallController {
       requestStatus: 'SENT',
     };
 
-    this.socketGateway.emitEvents(caller.userId, 'call-request', { callData: callerData }, null, caller.deviceId);
+    const emitCallRequestEvent = new EmitEventDto();
+
+    emitCallRequestEvent.users = [caller.userId];
+    emitCallRequestEvent.event = 'call-request';
+    emitCallRequestEvent.data = { callData: callerData };
+
+    this.socketGateway.emitEvents(emitCallRequestEvent);
 
     return {
       message: "messages.call.request_accepted",

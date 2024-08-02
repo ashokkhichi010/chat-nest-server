@@ -1,0 +1,14 @@
+{
+    "editor.formatOnSaveMode": "modifications",
+    "editor.formatOnSave": true,
+    "notebook.formatOnSave.enabled": true,
+    "files.autoSaveWhenNoErrors": true,
+    "files.autoSaveWorkspaceFilesOnly": true,
+    "files.refactoring.autoSave": true,
+    "files.autoSave": "onFocusChange",
+    "npm.fetchOnlinePackageInfo": true,
+    "editor.formatOnType": true,
+    "editor.formatOnPaste": true,
+    "editor.tabSize": 2,
+    "editor.fontSize": 14,
+}

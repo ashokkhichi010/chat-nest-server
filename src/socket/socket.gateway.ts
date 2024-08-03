@@ -142,7 +142,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('ludo-sync-data')
   async handleUpdatePiece(@MessageBody() ludoUpdatePieceBody: LudoUpdatePieceDto) {
     const ludoConnectionId = ludoUpdatePieceBody.ludoConnectionId;
-    const ludoPiecesInfo = ludoUpdatePieceBody.updatedPieces;
+    const ludoPiecesInfo = ludoUpdatePieceBody.ludoPiecesInfo;
 
     await this.ludoService.updatePlayerPieces(ludoConnectionId, ludoPiecesInfo);
   }

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, Get, Param,  NotAcceptableException } from '@nestjs/common';
+import { Controller, Post, Body, Headers, Get, Param, NotAcceptableException } from '@nestjs/common';
 import { LudoService } from './ludo.service';
 import { Roles } from 'src/decorators/roles.decorator';
 import { User } from 'src/users/users.entity';
@@ -8,6 +8,7 @@ import { CustomObjectId } from 'src/pipes/customObjectId.pipe';
 import { SocketGateway } from 'src/socket/socket.gateway';
 import { compairMongoId } from 'src/utils/helper';
 import { DeviceHeadersDto } from 'src/auth/dto/device.dto';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 // import { CreateLudoDto } from './dto/create-ludo.dto';
 
 @Controller('ludo')
@@ -46,7 +47,13 @@ export class LudoController {
       throw new NotAcceptableException('messages.ludo.unauthorized_to_send_invitation');
     }
 
-    friends.forEach(friend => this.socketGateway.emitEvents(friend, 'ludo-game-request', { ...ludoConnection.toJSON() }));
+    const emitLudoRequestEvent = new EmitEventDto();
+
+    emitLudoRequestEvent.users = friends;
+    emitLudoRequestEvent.event = 'ludo-game-request';
+    emitLudoRequestEvent.data = { ...ludoConnection.toJSON() }
+
+    this.socketGateway.emitEvents(emitLudoRequestEvent);
 
     return {
       message: "messages.ludo.request_sent",
@@ -64,14 +71,26 @@ export class LudoController {
 
     const isAllPlayersConnected = connectedPlayers.length === 4;
 
-    connectedPlayers.forEach(friend => this.socketGateway.emitEvents(friend.userId, 'ludo-game-request', { ...ludoConnection.toJSON(), is_starting: isAllPlayersConnected }, null, friend.deviceId));
+    const emitLudoRequestEvent = new EmitEventDto();
+
+    emitLudoRequestEvent.devices = connectedPlayers.map(friend => friend.deviceId);
+    emitLudoRequestEvent.event = 'ludo-game-request';
+    emitLudoRequestEvent.data = { ...ludoConnection.toJSON(), is_starting: isAllPlayersConnected };
+
+    this.socketGateway.emitEvents(emitLudoRequestEvent);
 
     if (isAllPlayersConnected) {
       setTimeout(() => {
         connectedPlayers.forEach(friend => {
           const gameInitialObjects = this.ludoService.getLudoInitializationData(ludoConnectionId, connectedPlayers, ludoConnection.piecesInfo, friend)
 
-          this.socketGateway.emitEvents(friend.userId, 'start-ludo-game', gameInitialObjects, null, friend.deviceId);
+          const emitLudoGameStartEvent = new EmitEventDto();
+
+          emitLudoGameStartEvent.devices = [friend.deviceId]
+          emitLudoGameStartEvent.event = 'start-ludo-game';
+          emitLudoGameStartEvent.data = gameInitialObjects;
+
+          this.socketGateway.emitEvents(emitLudoGameStartEvent);
         });
       }, 3000);
     }
@@ -90,7 +109,13 @@ export class LudoController {
 
     const connectedPlayers = ludoConnection.players;
 
-    connectedPlayers.forEach(friend => this.socketGateway.emitEvents(friend.userId, 'ludo-game-request', { ...ludoConnection.toJSON() }, null, friend.deviceId));
+    const emitLudoRequestEvent = new EmitEventDto();
+
+    emitLudoRequestEvent.devices = connectedPlayers.map(friend => friend.deviceId);
+    emitLudoRequestEvent.event = 'ludo-game-request';
+    emitLudoRequestEvent.data = ludoConnection.toJSON();
+
+    this.socketGateway.emitEvents(emitLudoRequestEvent);
 
     return {
       message: "messages.ludo.leaved",

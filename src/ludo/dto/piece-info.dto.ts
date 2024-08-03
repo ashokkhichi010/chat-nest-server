@@ -6,6 +6,8 @@ export class PlayerPieceDto {
     is_my_turn: boolean;
     is_dice_used: boolean;
     dice_value: number;
+    is_winner: boolean;
+    winner_no: number;
     pieces: {
         1: number;
         2: number;

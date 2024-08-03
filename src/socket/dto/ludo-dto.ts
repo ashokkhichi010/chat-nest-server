@@ -13,5 +13,5 @@ export class LudoMovePieceDto {
 
 export class LudoUpdatePieceDto {
   ludoConnectionId: Types.ObjectId;
-  updatedPieces: object;
+  ludoPiecesInfo: object;
 }

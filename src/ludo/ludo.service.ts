@@ -7,6 +7,7 @@ import { LudoPlayer, PlayerPieceDto } from './dto/piece-info.dto';
 import { compairMongoId, generateRandomNumber, getRandomValue } from 'src/utils/helper';
 import * as moment from 'moment';
 import { User } from 'src/users/users.entity';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Injectable()
 export class LudoService {
@@ -57,12 +58,14 @@ export class LudoService {
   getPieceInfo = (playerType: string): PlayerPieceDto => {
     const isFirstPlayer = playerType === "player_a";
 
-    const pieceInfo = {
+    const pieceInfo: PlayerPieceDto = {
       playerType,
       action: isFirstPlayer ? "dice_roll" : "",
       is_my_turn: isFirstPlayer,
       is_dice_used: isFirstPlayer,
       dice_value: 0,
+      is_winner: false,
+      winner_no: 4,
       pieces: {
         "1": 0,
         "2": 0,
@@ -214,53 +217,105 @@ export class LudoService {
     const connectedPlayers = ludoConnection.players;
     const connectedPlayerPieces = ludoConnection.piecesInfo;
 
-    const playerPiece = connectedPlayerPieces.find(piece => piece.playerType === player_type);
-    const otherPlayerPiece = connectedPlayerPieces.filter(piece => piece.playerType !== player_type);
+    const currentPlayerPiece = connectedPlayerPieces.find(piece => piece.playerType === player_type);
 
     const diceValue = getRandomValue({ maxValue: 6 });
 
     const playerPiecesInfo = {};
 
-    playerPiece.action = "dice_rolling";
-    playerPiece.dice_value = diceValue;
-    playerPiece.is_dice_used = false;
+    const isPlayerHasDiceRollingPermission = currentPlayerPiece.action === "dice_roll" && currentPlayerPiece.is_dice_used;
 
-    const updatedPiecesInfo = [...otherPlayerPiece, playerPiece];
+    if (!isPlayerHasDiceRollingPermission) {
+      // return;
+    }
 
     connectedPlayers.forEach((player) => {
-      const currentPlayerPiece = updatedPiecesInfo.find(piece => piece.playerType === player.type);
+      const playerPiece = connectedPlayerPieces.find(piece => piece.playerType === player.type);
+      const isCurrentPlayer = player.type === player_type;
 
       playerPiecesInfo[player.type] = {
-        action: currentPlayerPiece.action,
-        is_my_turn: currentPlayerPiece.is_my_turn,
-        is_dice_used: currentPlayerPiece.is_dice_used,
-        dice_value: currentPlayerPiece.dice_value,
-        pieces: currentPlayerPiece.pieces,
+        action: isCurrentPlayer ? "dice_rolling" : "",
+        is_my_turn: isCurrentPlayer,
+        is_dice_used: !isCurrentPlayer,
+        dice_value: playerPiece.dice_value,
+        pieces: playerPiece.pieces,
+        new_dice_value: isCurrentPlayer ? diceValue : 0,
+        suggested_piece: 0,
+        is_winner: playerPiece.is_winner || false,
+        winner_no: playerPiece.winner_no || 4,
       }
     });
 
-    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { playerPiecesInfo }, null, friend.deviceId));
+    const emitLudoDiceRollingEvent = new EmitEventDto();
 
-    ludoConnection.piecesInfo = updatedPiecesInfo;
+    emitLudoDiceRollingEvent.devices = connectedPlayers.map(friend => friend.deviceId);
+    emitLudoDiceRollingEvent.event = 'ludo-dice-rolling';
+    emitLudoDiceRollingEvent.data = { playerPiecesInfo };
 
+    emitEvents(emitLudoDiceRollingEvent);
+  }
+
+  movePiece = async (ludoConnectionId: Types.ObjectId, player_type: string, pieceIndex: string, emitEvents: Function) => {
+    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
+    const connectedPlayers = ludoConnection.players;
+    const connectedPlayerPieces = ludoConnection.piecesInfo;
+
+    const currentPlayerPiece = connectedPlayerPieces.find(piece => piece.playerType === player_type);
+
+    const playerPiecesInfo = {};
+
+    const isPlayerHasPieceMovingPermission = currentPlayerPiece.action === "move_piece" && currentPlayerPiece.is_my_turn;
+
+    if (!isPlayerHasPieceMovingPermission) {
+      // return;
+    }
+
+    connectedPlayerPieces.forEach((playerPiece) => {
+      const isPieceMover = playerPiece.playerType === player_type;
+
+      playerPiecesInfo[playerPiece.playerType] = {
+        action: playerPiece.action,
+        is_my_turn: playerPiece.is_my_turn,
+        is_dice_used: playerPiece.is_dice_used,
+        dice_value: playerPiece.dice_value,
+        pieces: playerPiece.pieces,
+        suggested_piece: isPieceMover ? pieceIndex : 0,
+        is_winner: playerPiece.is_winner || false,
+        winner_no: playerPiece.winner_no || 4,
+      }
+    });
+
+    const emitLudoPieceMovingEvent = new EmitEventDto();
+
+    emitLudoPieceMovingEvent.devices = connectedPlayers.map(friend => friend.deviceId);
+    emitLudoPieceMovingEvent.event = 'ludo-piece-moving';
+    emitLudoPieceMovingEvent.data = { playerPiecesInfo };
+
+    emitEvents(emitLudoPieceMovingEvent);
+  }
+
+  updatePlayerPieces = async (ludoConnectionId: Types.ObjectId, ludoPiecesInfo: object) => {
+    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
+
+    const playerKeys = Object.keys(ludoPiecesInfo);
+
+    const needToUpdate: PlayerPieceDto[] = playerKeys.map(playerKey => {
+      const playerPieceInfo = ludoPiecesInfo[playerKey];
+
+      return {
+        playerType: playerKey,
+        action: playerPieceInfo.action,
+        dice_value: playerPieceInfo.dice_value,
+        new_dice_value: 0,
+        is_dice_used: playerPieceInfo.is_dice_used,
+        is_my_turn: playerPieceInfo.is_my_turn,
+        pieces: playerPieceInfo.pieces,
+        is_winner: playerPieceInfo.is_winner || false,
+        winner_no: playerPieceInfo.winner_no || 4,
+      }
+    })
+
+    ludoConnection.piecesInfo = needToUpdate;
     await ludoConnection.save();
-  }
-
-  movePiece = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {
-    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
-    const connectedPlayers = ludoConnection.toJSON().players;
-
-    const pieceMover = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
-
-    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-piece-moving', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
-  }
-
-  updatePieceValue = async (ludoConnectionId: Types.ObjectId, playerId: Types.ObjectId, pieceIndex: Types.ObjectId, emitEvents: Function) => {
-    const ludoConnection = await this.getLudoConnectionById(ludoConnectionId);
-    const connectedPlayers = ludoConnection.toJSON().players;
-
-    const pieceMover = connectedPlayers.find(player => compairMongoId(player.userId, playerId));
-
-    connectedPlayers.forEach(friend => emitEvents(friend.userId, 'ludo-dice-rolling', { piece_mover: pieceMover, pieceIndex }, null, friend.deviceId));
   }
 }

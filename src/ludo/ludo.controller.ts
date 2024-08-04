@@ -69,7 +69,7 @@ export class LudoController {
 
     const connectedPlayers = ludoConnection.players;
 
-    const isAllPlayersConnected = connectedPlayers.length === 4;
+    const isAllPlayersConnected = this.ludoService.totalConnectedFriends(connectedPlayers) === 4;
 
     const emitLudoRequestEvent = new EmitEventDto();
 
@@ -107,15 +107,43 @@ export class LudoController {
 
     const ludoConnection = await this.ludoService.leaveLudoGame(ludoConnectionId, userId);
 
+    const isGameStarted = ludoConnection.isStarted;
+
     const connectedPlayers = ludoConnection.players;
 
     const emitLudoRequestEvent = new EmitEventDto();
 
     emitLudoRequestEvent.devices = connectedPlayers.map(friend => friend.deviceId);
-    emitLudoRequestEvent.event = 'ludo-game-request';
-    emitLudoRequestEvent.data = ludoConnection.toJSON();
+    emitLudoRequestEvent.event = isGameStarted ? "update-ludo-players" : 'ludo-game-request';
+    emitLudoRequestEvent.data = isGameStarted
+      ? (this.ludoService.getPlayersInfo(ludoConnection._id, ludoConnection.players))
+      : ludoConnection.toJSON();
 
     this.socketGateway.emitEvents(emitLudoRequestEvent);
+
+    return {
+      message: "messages.ludo.leaved",
+    }
+  }
+
+  @Roles('user')
+  @Get(':ludoConnectionId/start-game')
+  async startGame(@AuthUser() user: User, @Param("ludoConnectionId", CustomObjectId) ludoConnectionId: Types.ObjectId) {
+    const ludoConnection = await this.ludoService.startGame(ludoConnectionId);
+
+    const connectedPlayers = ludoConnection.players;
+
+    connectedPlayers.forEach(friend => {
+      const gameInitialObjects = this.ludoService.getLudoInitializationData(ludoConnectionId, connectedPlayers, ludoConnection.piecesInfo, friend)
+
+      const emitLudoGameStartEvent = new EmitEventDto();
+
+      emitLudoGameStartEvent.devices = [friend.deviceId]
+      emitLudoGameStartEvent.event = 'start-ludo-game';
+      emitLudoGameStartEvent.data = gameInitialObjects;
+
+      this.socketGateway.emitEvents(emitLudoGameStartEvent);
+    });
 
     return {
       message: "messages.ludo.leaved",

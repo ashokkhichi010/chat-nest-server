@@ -13,9 +13,9 @@ export const friendRequestRejected = (contactUserName: string) => ({
   body: `Sorry, ${contactUserName} has declined your friend request. Don't worry, there are plenty of connections to make!`,
 });
 
-export const textMessageReceived = (contactUserName: string) => ({
-  title: `📩 New Message`,
-  body: `You've received a text message from ${contactUserName}. Check it out and keep the conversation going!`,
+export const textMessageReceived = (contactUserName: string, message: string) => ({
+  title: contactUserName,
+  body: message,
 });
 
 export const friendRequestSent = (contactUserName: string) => `Hey there! You've sent a friend request to ${contactUserName}. Stay tuned for their response!`;

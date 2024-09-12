@@ -177,6 +177,7 @@ export class ContactService {
           pipeline: [
             {
               $match: {
+                isDeleted: false,
                 $expr: {
                   $and: [
                     { $eq: ["$connectionId", "$$connectionId"] },
@@ -187,7 +188,6 @@ export class ContactService {
             {
               $facet: {
                 lastMessage: [
-                  { $match: { isDeleted: false } },
                   {
                     $sort: {
                       createdAt: -1

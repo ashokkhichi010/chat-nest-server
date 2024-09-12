@@ -101,7 +101,7 @@ export class MessageController {
       }
     }
 
-    const notification = textMessageReceived(name);
+    const notification = textMessageReceived(name, message);
 
     const emitEventToFriend = new EmitEventDto();
 

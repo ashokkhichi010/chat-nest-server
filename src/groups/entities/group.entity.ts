@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { userCollection } from 'src/users/users.entity';
 
 @Schema({ timestamps: true })
 export class Groups extends Document {
@@ -12,8 +13,14 @@ export class Groups extends Document {
     @Prop({ type: String, required: false, trim: true })
     image: string;
 
-    @Prop({ type: Array, required: true })
-    users: Types.ObjectId[];
+    @Prop({ type: Types.ObjectId, required: true, ref: userCollection })
+    owner: Types.ObjectId;
+
+    @Prop({ type: Types.ObjectId, required: true, ref: userCollection })
+    members: Types.ObjectId[];
+
+    @Prop({ type: Types.ObjectId, required: true, ref: userCollection })
+    admins: Types.ObjectId[];
 
     @Prop({ type: Boolean, required: false, default: false })
     isDeleted: boolean;

@@ -19,9 +19,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { MessageModule } from './message/message.module';
 import { SocketModule } from './socket/socket.module';
 import { NotificationsModule } from './notifications/notifications.module';
-import { GroupsModule } from './groups/groups.module';
 import { CallModule } from './call/call.module';
 import { LudoModule } from './ludo/ludo.module';
+import { AiRecommendationsModule } from './ai-recommendations/ai-recommendations.module';
+import { TradingSimulationModule } from './trading-simulation/trading-simulation.module';
+import { SmartApiModule } from './smartapi/smartapi.module';
 
 const config = customConfig()
 
@@ -52,9 +54,12 @@ const config = customConfig()
         CommonModule,
         ContactModule,
         NotificationsModule,
-        GroupsModule,
+        // GroupsModule,
         CallModule,
         LudoModule,
+        AiRecommendationsModule,
+        TradingSimulationModule,
+        SmartApiModule,
     ],
     controllers: [],
     providers: [

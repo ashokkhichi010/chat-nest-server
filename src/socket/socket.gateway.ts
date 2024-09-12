@@ -212,16 +212,15 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     const clientIds = devices.length ? await this.socketService.getClientIdsByDevices(devices) : await this.socketService.getConnectedClientIds(users);
 
-    // const customCallback = (err: Error, res: any) => {
-    //   if (!res[0]?.success) {
-    //     const notification = data?.notification;
-    //     // notification && this.notificationService.createNotification({ userId, ...notification });
-    //   }
-    // };
+    const customCallback = (err: Error, res: any) => {
+      if (!res[0]?.success) {
+        const notification = data?.notification;
+        // notification && this.notificationService.createNotification({ userId, ...notification });
+      }
+    };
 
     if (clientIds.length) {
-      this.server.timeout(timeout).to(clientIds).emit(event, data, callback);
-      // this.server.timeout(timeout).to(clientIds).emit(event, data, callback || customCallback);
+      this.server.timeout(timeout).to(clientIds).emit(event, data, callback || customCallback);
     }
   };
 }

@@ -1,4 +1,4 @@
-import moment from 'moment';
+import * as moment from 'moment';
 import { ObjectId, ClientSession, Types } from 'mongoose';
 
 export class CreateTokenDto {

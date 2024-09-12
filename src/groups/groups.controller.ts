@@ -1,34 +1,46 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Put } from '@nestjs/common';
 import { GroupsService } from './groups.service';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
+import { BodyGroupDto } from './dto/create-group.dto';
+import { User } from 'src/users/users.entity';
+import { AuthUser } from 'src/decorators/user.decorator';
+import { Types } from 'mongoose';
+import { SocketGateway } from 'src/socket/socket.gateway';
+import { EmitEventDto } from 'src/socket/dto/create-socket.dto';
 
 @Controller('groups')
 export class GroupsController {
-  constructor(private readonly groupsService: GroupsService) {}
+  constructor(
+    private readonly groupsService: GroupsService,
+    private readonly socketGateway: SocketGateway,
+  ) { }
 
   @Post('create')
-  create(@Body() createGroupDto: CreateGroupDto) {
-    return this.groupsService.createGroup(createGroupDto);
+  create(@AuthUser() user: User, @Body() body: BodyGroupDto) {
+    const groupOwner = user._id;
+
+    const groupData = {
+      name: body.name,
+      description: body.description,
+      image: body.image,
+      owner: groupOwner,
+      members: [groupOwner, ...body.members],
+      admins: [groupOwner],
+    };
+
+    return this.groupsService.saveGroup(groupData);
   }
 
-  @Get()
-  findAll() {
-    // return this.groupsService.findAll();
-  }
+  @Post("add-users")
+  async addUsers(@Body() body: { groupId: Types.ObjectId, users: Types.ObjectId[] }) {
+    const group = await this.groupsService.addMembers(body.groupId, body.users);
+    const data = { groupName: group.name, };
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    // return this.groupsService.findOne(+id);
-  }
+    const emitLudoDiceRollingEvent = new EmitEventDto();
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGroupDto: UpdateGroupDto) {
-    // return this.groupsService.update(+id, updateGroupDto);
-  }
+    emitLudoDiceRollingEvent.users = body.users;
+    emitLudoDiceRollingEvent.event = 'new-group';
+    emitLudoDiceRollingEvent.data = data;
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    // return this.groupsService.remove(+id);
+    await this.socketGateway.emitEvents(emitLudoDiceRollingEvent);
   }
 }

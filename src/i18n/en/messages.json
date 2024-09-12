@@ -82,7 +82,11 @@
     "room_is_full": "Sorry, you cannot join this Ludo game because it has already started or completed.",
     "joined": "Ludo room joined successfully.",
     "leaved": "Ludo room leaved successfully.",
+    "cantStartGameWithSelf": "Please add at least one friend to start playing the game.",
     "session_expired": "Ludo game session expired."
+  },
+  "group": {
+    "notFound": "Group not found"
   },
   "LOGIN_SUCCESSFULLY": "Signed in successfully.",
   "LOGIN_UNSUCCESSFULLY": "Email or password is incorrect.",

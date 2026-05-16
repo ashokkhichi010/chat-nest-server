@@ -8,10 +8,15 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
 
   const config = new DocumentBuilder()
-    .setTitle('Cats example')
-    .setDescription('The cats API description')
+    .setTitle('NexChat & TradeSmart API')
+    .setDescription('Unified API for Real-time Communication, Gaming, and Financial Trading Simulation.')
     .setVersion('1.0')
-    .addTag('cats')
+    .addTag('auth')
+    .addTag('users')
+    .addTag('chat')
+    .addTag('games')
+    .addTag('trading')
+    .addBearerAuth()
     .build();
 
   const options: SwaggerDocumentOptions = {

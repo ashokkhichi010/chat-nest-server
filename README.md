@@ -1,10 +1,10 @@
-# NexChat & TradeSmart: Back-end Service
+# Chat-Application: Back-end Service
 
 [![NestJS](https://img.shields.io/badge/Framework-NestJS-E0234E?logo=nestjs)](https://nestjs.com/)
 [![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?logo=mongodb)](https://www.mongodb.com/)
 [![Swagger](https://img.shields.io/badge/API_Docs-Swagger-85EA2D?logo=swagger)](http://localhost:4040/api)
 
-The backbone of the NexChat ecosystem, providing secure, real-time services for communication, gaming, and trading simulation.
+The backbone of the Chat-Application ecosystem, providing secure, real-time services for communication, gaming, and trading simulation.
 
 ## 🛠️ Tech Stack
 - **Framework**: NestJS (Node.js)
